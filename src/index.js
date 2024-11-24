@@ -1,6 +1,5 @@
-const MovieSearchBot = require('./bot/MovieSearchBot');
 require('dotenv').config();
+const MovieSearchBot = require('./bot/MovieSearchBot');
 
-// Iniciar el bot
-const movieBot = new MovieSearchBot();
+const bot = new MovieSearchBot();
 console.log('🚀 Bot iniciado exitosamente!');

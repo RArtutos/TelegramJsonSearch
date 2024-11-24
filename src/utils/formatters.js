@@ -1,5 +1,5 @@
 function formatBytes(bytes, decimals = 2) {
-  if (!bytes || bytes === 0) return '0 Bytes';
+  if (!bytes) return '0 Bytes';
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -8,28 +8,18 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 function formatTime(seconds) {
-  if (!isFinite(seconds) || seconds < 0) return 'Calculando...';
-  if (seconds < 60) return `${Math.floor(seconds)}s`;
-  if (seconds < 3600) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}m ${secs}s`;
-  }
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-}
-
-function createProgressBar(progress) {
-  const normalizedProgress = Math.min(Math.max(progress, 0), 100);
-  const filledLength = Math.max(0, Math.min(20, Math.floor(normalizedProgress / 5)));
-  const emptyLength = Math.max(0, 20 - filledLength);
-  
-  return '▓'.repeat(filledLength) + '░'.repeat(emptyLength);
+  if (!seconds) return '0s';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return [
+    h > 0 ? `${h}h` : '',
+    m > 0 ? `${m}m` : '',
+    `${s}s`
+  ].filter(Boolean).join(' ');
 }
 
 module.exports = {
   formatBytes,
-  formatTime,
-  createProgressBar
+  formatTime
 };

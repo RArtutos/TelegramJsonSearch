@@ -1,11 +1,1021 @@
-{
-  "movies": [
+[
     {
-      "id": "example-movie-1",
-      "title": "Example Movie 1",
-      "type": "file",
-      "mimeType": "video/mp4",
-      "path": "/movies/example1.mp4"
-    }
-  ]
-}
+        "buildTime": "2024-11-15 17:58:24.192683",
+        "categoryInfo": {
+            "adult": false,
+            "anilist": false,
+            "id": "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY",
+            "language": "es-MX",
+            "name": "\ud83c\udf1f\ud83c\udfa5 Nuevas Agregadas",
+            "type": "Movies"
+        },
+        "children": [
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 653349,
+                "backdropPath": "https://image.tmdb.org/t/p/original/o0UGl6icA4DbhmDNgdZ5AWvuTtM.jpg",
+                "genres": [
+                    "Comedy"
+                ],
+                "id": "1bynPUggiosrAf_vPKEGNN7vh5w-0PZfR",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Amigos de las vacaciones (2021) DSNP WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "Marcus y Emily se vuelven amigos de los fiesteros en busca de emociones fuertes, Ron y Kyla, en un resort en M\u00e9xico. Al vivir al momento, Marcus y Emily disfrutan una semana salvaje de diversi\u00f3n y libertinaje con sus \"amigos de las vacaciones\". Meses despu\u00e9s de su paseo por el lado salvaje, Marcus y Emily se horrorizan cuando Ron y Kyla aparecen en su boda sin haber sido invitados.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 40.129,
+                "posterPath": "https://image.tmdb.org/t/p/w342/5gQmECcdlJeYlBHTh0TIz3DE75Y.jpg",
+                "releaseDate": "2021-08-27",
+                "title": "Amigos de las vacaciones",
+                "type": "file",
+                "voteAverage": 7.09
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 869641,
+                "backdropPath": "https://image.tmdb.org/t/p/original/gyaqhppr9BnBCFF0R2dXeIe4J1k.jpg",
+                "genres": [
+                    "Comedy"
+                ],
+                "id": "14CH7wdgO3oiiUMPlKyzq-lI2eit4fOU7",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Amigos de las vacaciones 2 (2023) DSNP WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "La pareja de reci\u00e9n casados \u200b\u200bMarcus y Emily invitan a sus desinhibidos mejores amigos Ron y Kyla, quienes tambi\u00e9n est\u00e1n reci\u00e9n casados \u200b\u200by tienen un beb\u00e9, para unirse a ellos en unas vacaciones cuando Marcus consigue un viaje con todos los gastos pagados a un centro tur\u00edstico del Caribe. Pero cuando el padre encarcelado de Kyla, Reese, es liberado de San Quentin y aparece en el resort sin previo aviso en el peor momento posible, las cosas se salen de control, lo que altera los mejores planes de Marcus y convierte el viaje perfecto de los amigos de vacaciones en un total caos.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 21.591,
+                "posterPath": "https://image.tmdb.org/t/p/w342/dedEnWKTW5akCOoIZyjCu6PeXdy.jpg",
+                "releaseDate": "2023-08-25",
+                "title": "Amigos de las vacaciones 2",
+                "type": "file",
+                "voteAverage": 6.338
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 415842,
+                "backdropPath": "https://image.tmdb.org/t/p/original/wb78lmqAXsUVG84xrmAOJBfgZHr.jpg",
+                "genres": [
+                    "Action",
+                    "Adventure",
+                    "Thriller"
+                ],
+                "id": "1bidAK7UqbBtjfSh2R5tanVWI-_83bMfk",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Asesino Mision venganza (2017) NF WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": "Tras la muerte de su prometida en un ataque terrorista, Mitch Rapp es reclutado por los Black Ops y entrena bajo la direcci\u00f3n de Stan Hurley, un agente de la CIA. Rapp y Hurley tendr\u00e1n que llevar a cabo una misi\u00f3n para detener una operaci\u00f3n que podr\u00eda desatar el caos a nivel internacional",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 35.818,
+                "posterPath": "https://image.tmdb.org/t/p/w342/1UFz4TrbVdwBaJTz0rZn3PFI5kp.jpg",
+                "releaseDate": "2017-09-14",
+                "title": "Asesino: Misi\u00f3n Venganza",
+                "type": "file",
+                "voteAverage": 6.405
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 573435,
+                "backdropPath": "https://image.tmdb.org/t/p/original/tncbMvfV0V07UZozXdBEq4Wu9HH.jpg",
+                "genres": [
+                    "Action",
+                    "Comedy"
+                ],
+                "id": "1Ge3z2OP8OT1eBHwiNUx8BYQrCG21DrS0",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Bad Boys - Ride or Die (2024) 1080p APTV WEB-DL Latino.mkv",
+                "overview": "Tras escuchar falsas acusaciones sobre su excapit\u00e1n y mentor Mike y Marcus deciden investigar el asunto incluso volverse los m\u00e1s buscados de ser necesarios",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 420.903,
+                "posterPath": "https://image.tmdb.org/t/p/w342/5jI2vEHJReAx8iFDmhC2O3yW37w.jpg",
+                "releaseDate": "2024-06-05",
+                "title": "Bad Boys: Hasta la muerte",
+                "type": "file",
+                "voteAverage": 7.5
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 917496,
+                "backdropPath": "https://image.tmdb.org/t/p/original/xi1VSt3DtkevUmzCx2mNlCoDe74.jpg",
+                "genres": [
+                    "Comedy",
+                    "Fantasy",
+                    "Horror"
+                ],
+                "id": "1ZKOU_1jVs1fUecSV40SnQJpP5C_9TAHz",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Beetlejuice Beetlejuice (2024) 1080p APTV WEB-DL Latino.mkv",
+                "overview": "Despu\u00e9s de una tragedia familiar, tres generaciones de la familia Deetz regresan a su hogar en Winter River. La vida de Lydia, que a\u00fan sigue atormentada por Beetlejuice, da un vuelco cuando su hija adolescente, Astrid, abre accidentalmente el portal al m\u00e1s all\u00e1.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 395.861,
+                "posterPath": "https://image.tmdb.org/t/p/w342/kWJw7dCWHcfMLr0irTHAPIKrJ4I.jpg",
+                "releaseDate": "2024-09-04",
+                "title": "Beetlejuice Beetlejuice",
+                "type": "file",
+                "voteAverage": 7.15
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 365177,
+                "backdropPath": "https://image.tmdb.org/t/p/original/mKOBdgaEFguADkJhfFslY7TYxIh.jpg",
+                "genres": [
+                    "Action",
+                    "Science Fiction",
+                    "Comedy"
+                ],
+                "id": "11ELinabTu_G3cbYQ1X9HeSkjGLVljOoC",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "BORDERLANDS (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": "Borderlands se desarrolla en el planeta Pandora. Atra\u00eddas por las aparentemente vastos yacimientos minerales, muchas naves colonizadores de la Dahl Corporation (una de las muchas diversas megacorporaciones que aparentemente controlan y gobiernan planetas enteros) viajan al planeta para construir asentamientos. Las operaciones de miner\u00eda son llevadas a cabo por una cantidad enorme de convictos llevados al planeta por la propia corporaci\u00f3n.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 270.696,
+                "posterPath": "https://image.tmdb.org/t/p/w342/jtEZi4eZxDjxcDIeMbkQ8HmvRs1.jpg",
+                "releaseDate": "2024-08-07",
+                "title": "Borderlands: El destino del universo est\u00e1 en juego",
+                "type": "file",
+                "voteAverage": 5.859
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 18183,
+                "backdropPath": "https://image.tmdb.org/t/p/original/fi7gBF2nfIGWF9MuOhuEr6rkgBQ.jpg",
+                "genres": [
+                    "Drama",
+                    "Romance"
+                ],
+                "id": "1f1aKuwV4nHG_ou4lWaOjj-dz1XZgFmYY",
+                "language": "es",
+                "mimeType": "video/x-matroska",
+                "name": "Como Agua para Chocolate (1992) MAX WEB-DL [1080p] [Lat - Por].mkv",
+                "overview": "Tita est\u00e1 apasionadamente enamorada de Pedro, pero su madre controladora le proh\u00edbe casarse con \u00e9l. Cuando Pedro se casa con su hermana, Tita se lanza a cocinar y descubre que puede trasladar sus emociones a trav\u00e9s de la comida que prepara, contagiando a todos los que la comen con su intenso desamor.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 73.527,
+                "posterPath": "https://image.tmdb.org/t/p/w342/bBToqYouLBaoojtC6AyRNeFcQoV.jpg",
+                "releaseDate": "1992-04-16",
+                "title": "Como agua para chocolate",
+                "type": "file",
+                "voteAverage": 7.288
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1337309,
+                "backdropPath": "https://image.tmdb.org/t/p/original/igtm12Wy9EUlxFeyb4v8bRyuYSY.jpg",
+                "genres": [
+                    "Action",
+                    "Crime",
+                    "Drama",
+                    "Thriller"
+                ],
+                "id": "1ejwEdInOsZzulfJQmKGXw4pgCXqgzjkz",
+                "language": "th",
+                "mimeType": "video/x-matroska",
+                "name": "Corrupcion en Bangkok Entre el cielo y el infierno (2024) NF WEB-DL [1080p] [Lat - Tha - Ing - Por - Cas].mkv",
+                "overview": "Un rescatista debe luchar por su vida cuando queda atrapado en medio de pandillas rivales en el peligroso bajo mundo de Bangkok.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 168.848,
+                "posterPath": "https://image.tmdb.org/t/p/w342/45Yxq9aEfMgPEq6bGZG0BgbDQge.jpg",
+                "releaseDate": "2024-09-26",
+                "title": "Corrupci\u00f3n en Bangkok: Entre el cielo y el infierno",
+                "type": "file",
+                "voteAverage": 6.6
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 533535,
+                "backdropPath": "https://image.tmdb.org/t/p/original/dvBCdCohwWbsP5qAaglOXagDMtk.jpg",
+                "genres": [
+                    "Action",
+                    "Comedy",
+                    "Science Fiction"
+                ],
+                "id": "1MMoca-6VW0cqS593lowgtoXC5CpLu8ID",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Deadpool & Wolverine (2024) ATVP WEB-DL [1080p] [Lat - Ing].mkv",
+                "overview": "Un Wade Wilson ap\u00e1tico se esfuerza en la vida civil. Sus d\u00edas como el mercenario moralmente flexible Deadpool quedaron atr\u00e1s. Cuando su mundo natal se enfrenta a una amenaza existencial, Wade debe, a rega\u00f1adientes, volver a la acci\u00f3n junto a un reacio Wolverine.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 1820.189,
+                "posterPath": "https://image.tmdb.org/t/p/w342/9TFSqghEHrlBMRR63yTx80Orxva.jpg",
+                "releaseDate": "2024-07-24",
+                "title": "Deadpool & Wolverine",
+                "type": "file",
+                "voteAverage": 7.702
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1359153,
+                "backdropPath": "https://image.tmdb.org/t/p/original/oreeF3l8IOiZFjdZCwaPetYDSqx.jpg",
+                "genres": [
+                    "Thriller",
+                    "Drama"
+                ],
+                "id": "1BZoQ2Uv0szrZjnHU04CN3Ud54ozfozWB",
+                "language": "es",
+                "mimeType": "video/x-matroska",
+                "name": "El diario (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": "Tras su divorcio, Olga (Azuela) se muda con su hija Vera (Arroyo) a una nueva ciudad. En el desv\u00e1n de su casa encuentra el diario de un asesino que, lejos de estar acabado, sigue reescribi\u00e9ndose, poniendo en peligro su vida y la de todos los que la rodean. Abrumada por este inexplicable suceso, Olga no encuentra a nadie m\u00e1s en quien confiar, excepto el terapeuta de su hija, Carlos (Ochmann). Sin embargo, tambi\u00e9n necesita resolver el conflicto con su ex marido, V\u00edctor (Ortizgris), y la nueva pareja de \u00e9ste, Mariana (Esc\u00e1rrega), para cuidar de Vera, mientras Olga intenta comprender su extra\u00f1a conexi\u00f3n con el diario y trata de averiguar la identidad del asesino que lo escribi\u00f3.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 19.933,
+                "posterPath": "https://image.tmdb.org/t/p/w342/plqa8Eyd4r3aWH5xk7vMPC3IUvr.jpg",
+                "releaseDate": "2024-10-04",
+                "title": "El diario",
+                "type": "file",
+                "voteAverage": 5.9
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 758323,
+                "backdropPath": "https://image.tmdb.org/t/p/original/bJFKGpUbSFSoXcIZcAgtAi3rtc7.jpg",
+                "genres": [
+                    "Horror",
+                    "Thriller"
+                ],
+                "id": "1ifjTnFLmeEF1GpqUm7zPD6DIEAoxguQt",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "El Exorcista Del Papa (2023) AMZN WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "El Padre Gabriele Amorth, Exorcista Principal del Vaticano investiga la terror\u00edfica posesi\u00f3n de un ni\u00f1o y termina descubriendo una conspiraci\u00f3n que hace siglos fue encubierta de manera desesperada por el Vaticano.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 63.351,
+                "posterPath": "https://image.tmdb.org/t/p/w342/2z1PVqfzvT4KjPNpQRfy5HpsyIW.jpg",
+                "releaseDate": "2023-04-05",
+                "title": "El Exorcista del Papa",
+                "type": "file",
+                "voteAverage": 7.0
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 315162,
+                "backdropPath": "https://image.tmdb.org/t/p/original/jr8tSoJGj33XLgFBy6lmZhpGQNu.jpg",
+                "genres": [
+                    "Animation",
+                    "Adventure",
+                    "Fantasy",
+                    "Comedy",
+                    "Family"
+                ],
+                "id": "1hYRLYYfC9ZpLcCIvg0ICyAJOamDiSyPw",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Gato con Botas El Ultimo Deseo (2022) AMZN WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "El audaz forajido Gato con Botas descubre que su pasi\u00f3n por el peligro y su desprecio por la seguridad le han pasado factura. El Gato ha quemado ocho de sus nueve vidas, aunque ha perdido la cuenta por el camino. Recuperar esas vidas har\u00e1 que el Gato con Botas emprenda su mayor b\u00fasqueda hasta ahora; la m\u00edtica Estrella de los Deseos.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 158.374,
+                "posterPath": "https://image.tmdb.org/t/p/w342/b5Jb7GoQaqIXy4VEdnQa0UrQZI.jpg",
+                "releaseDate": "2022-12-07",
+                "title": "Gato con Botas: El \u00faltimo deseo",
+                "type": "file",
+                "voteAverage": 8.222
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 826510,
+                "backdropPath": "https://image.tmdb.org/t/p/original/iURqo6oIwbeegIwWXx5qrBsDcPk.jpg",
+                "genres": [
+                    "Family",
+                    "Adventure",
+                    "Fantasy",
+                    "Comedy"
+                ],
+                "id": "1TPTHNanlf741brthE2MdH-7xunLYpT-C",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Harold Y Su Crayon Magico (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": "Dentro de su libro, el aventurero Harold puede hacer que cualquier cosa cobre vida simplemente dibuj\u00e1ndola. Cuando crece y se dibuja a s\u00ed mismo fuera de las p\u00e1ginas del libro, Harold descubre que tiene mucho que aprender sobre la vida real.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 191.17,
+                "posterPath": "https://image.tmdb.org/t/p/w342/1LRmVHwhH4bCyMHHgz3ZZdqu7lO.jpg",
+                "releaseDate": "2024-07-31",
+                "title": "Harold y su cray\u00f3n m\u00e1gico",
+                "type": "file",
+                "voteAverage": 7.0
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 960875,
+                "backdropPath": "https://image.tmdb.org/t/p/original/u1KFDIP64LjG3iD1dbSRBSDNyge.jpg",
+                "genres": [
+                    "Horror",
+                    "Mystery"
+                ],
+                "id": "12vzrQj3gycNrmcGyAvRowDCOiiFAFkDS",
+                "language": "es",
+                "mimeType": "video/x-matroska",
+                "name": "Jaula (2022) NF WEB-DL [1080p] [Cas - Ing - Por].mkv",
+                "overview": "Despu\u00e9s de que una pareja encuentra a una ni\u00f1a traumatizada de or\u00edgenes desconocidos, la esposa Paula debe descifrar los extra\u00f1os comportamientos de la ni\u00f1a para descubrir su identidad y su oscuro pasado.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 11.7,
+                "posterPath": "https://image.tmdb.org/t/p/w342/z0iZuYNM0hUyHZeldIdXf4aSrPy.jpg",
+                "releaseDate": "2022-09-09",
+                "title": "Jaula",
+                "type": "file",
+                "voteAverage": 6.4
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 889737,
+                "backdropPath": "https://image.tmdb.org/t/p/original/uGmYqxh8flqkudioyFtD7IJSHxK.jpg",
+                "genres": [
+                    "Drama",
+                    "Crime",
+                    "Thriller"
+                ],
+                "id": "1VD8yBJNtn77PBR02wqVmGPvY3L-9xims",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Joker Folie \u00e0 Deux (2024) 1080p AMZN WEB-DL Latino (1).mkv",
+                "overview": "El fracasado comediante Arthur Fleck conoce al amor de su vida, Harley Quinn, mientras est\u00e1 encarcelado en el Hospital Estatal de Arkham. Tras su liberaci\u00f3n, los dos se embarcan en una desventura rom\u00e1ntica condenada al fracaso.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 664.624,
+                "posterPath": "https://image.tmdb.org/t/p/w342/tMMYwxrPwVPrxz3DqXs8DnVIOx0.jpg",
+                "releaseDate": "2024-10-01",
+                "title": "Guas\u00f3n 2: Folie \u00e0 Deux",
+                "type": "file",
+                "voteAverage": 5.6
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 889737,
+                "backdropPath": "https://image.tmdb.org/t/p/original/uGmYqxh8flqkudioyFtD7IJSHxK.jpg",
+                "genres": [
+                    "Drama",
+                    "Crime",
+                    "Thriller"
+                ],
+                "id": "1KxpbqwGfOIM88abX8Mii3CgMKyfWkqYa",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Joker Folie \u00e0 Deux (2024) 1080p AMZN WEB-DL Latino.mkv",
+                "overview": "El fracasado comediante Arthur Fleck conoce al amor de su vida, Harley Quinn, mientras est\u00e1 encarcelado en el Hospital Estatal de Arkham. Tras su liberaci\u00f3n, los dos se embarcan en una desventura rom\u00e1ntica condenada al fracaso.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 664.624,
+                "posterPath": "https://image.tmdb.org/t/p/w342/tMMYwxrPwVPrxz3DqXs8DnVIOx0.jpg",
+                "releaseDate": "2024-10-01",
+                "title": "Guas\u00f3n 2: Folie \u00e0 Deux",
+                "type": "file",
+                "voteAverage": 5.6
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1014661,
+                "backdropPath": "https://image.tmdb.org/t/p/original/aKCxzcNr8bUiJCwrrc0y9rYFfbU.jpg",
+                "genres": [
+                    "Horror",
+                    "Thriller"
+                ],
+                "id": "1Xz7b9qN9qQzos8Fau8xEOvWw2yJox5Op",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "La casa de los despojos (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "Una chef abre su primer restaurante donde lucha contra el caos en la cocina, un inversor dudoso y la duda de s\u00ed misma, pero la presi\u00f3n aumenta gracias al esp\u00edritu del anterior propietario de la finca, que amenaza con sabotearla.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 55.8,
+                "posterPath": "https://image.tmdb.org/t/p/w342/zcJVEJaEe32GfbLpHt4OSW2PBzV.jpg",
+                "releaseDate": "2024-09-21",
+                "title": "La Casa De Los Despojos",
+                "type": "file",
+                "voteAverage": 5.6
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1142518,
+                "backdropPath": "https://image.tmdb.org/t/p/original/n9Do4rv1Hl3QvQLMmT5w6pBadqq.jpg",
+                "genres": [
+                    "Action",
+                    "Romance",
+                    "Drama"
+                ],
+                "id": "1CWDEXMuDPbyWVfNTLW7vDZc9_VRqsoIY",
+                "language": "fr",
+                "mimeType": "video/x-matroska",
+                "name": "Libre encanto criminal (2024) AMZN WEB-DL [1080p] [Lat - Fra - Ing - Por - Cas].mkv",
+                "overview": "Inspired by the true events of one of France's most notorious non-violent robbers, Bruno Sulak, in the 1980s. He led multiple heists, then captured public attention for his many daring escapes from police custody...always to reunite with his beloved lover and accomplice Annie, becoming both France's Public Enemy #1 and an icon of Freedom.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 690.195,
+                "posterPath": "https://image.tmdb.org/t/p/w342/thW4P7HLSxpb0JiEqfIJKT67Tew.jpg",
+                "releaseDate": "2024-11-01",
+                "title": "Freedom",
+                "type": "file",
+                "voteAverage": 6.7
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 877817,
+                "backdropPath": "https://image.tmdb.org/t/p/original/uXDwP5qPhuRyPpQ7WkLbE6t2z5W.jpg",
+                "genres": [
+                    "Comedy",
+                    "Action",
+                    "Crime"
+                ],
+                "id": "1qoKM7NmOVpMPP530x8PTJzfWboW-Tkmw",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Lobos (2024) ATVP WEB-DL 1080p [Lat - Ing - Por - Cas].mkv",
+                "overview": "Dos solucionadores rivales se encuentran al ser llamados para cubrir el desliz de una destacada funcionaria de Nueva York. Durante una agitada noche deber\u00e1n olvidar sus diferencias, y sus egos, para terminar el trabajo.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 183.75,
+                "posterPath": "https://image.tmdb.org/t/p/w342/xT3CLqaix8CAhiuXmptJcxwCFBj.jpg",
+                "releaseDate": "2024-09-20",
+                "title": "Lobos",
+                "type": "file",
+                "voteAverage": 6.6
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1244492,
+                "backdropPath": "https://image.tmdb.org/t/p/original/1MzBCKjwDyQg2Cu8XJR8Ox59sWY.jpg",
+                "genres": [
+                    "Animation",
+                    "Drama"
+                ],
+                "id": "1OL17e5S7tIJuecSBmusmnNAbB6t_Jfzb",
+                "language": "ja",
+                "mimeType": "video/x-matroska",
+                "name": "Look Back (2024) 720p HDCam Latino.mkv",
+                "overview": "Fujino, una estudiante de cuarto grado, publica un manga en el peri\u00f3dico escolar, recibiendo buenas cr\u00edticas de sus compa\u00f1eros. Un d\u00eda, su maestro le cuenta que Kyomoto, una compa\u00f1era que falta a clases, tambi\u00e9n quiere publicar su propio manga. Su amor por el manga las une, pero un suceso lo cambia todo. As\u00ed comienza una desgarradora historia...",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 252.025,
+                "posterPath": "https://image.tmdb.org/t/p/w342/yGPEQdlYbAINCK7DbhhEY0UUycS.jpg",
+                "releaseDate": "2024-06-28",
+                "title": "LOOK BACK: Contin\u00faa Dibujando",
+                "type": "file",
+                "voteAverage": 7.9
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1091181,
+                "backdropPath": "https://image.tmdb.org/t/p/original/sLp1vdiIQoLgLYsOb9ebDbBYB7D.jpg",
+                "genres": [
+                    "Adventure",
+                    "Comedy",
+                    "Fantasy",
+                    "Action"
+                ],
+                "id": "1XQBtedsgHxYnvwSmcReGZyWK4biMIB_X",
+                "language": "fr",
+                "mimeType": "video/x-matroska",
+                "name": "Los hombres lobo (2024) NF WEB-DL [1080p] [Lat - Fra - Ing - Por - Cas].mkv",
+                "overview": "Cuando un antiguo juego de cartas irrumpe en el mundo real, una familia viaja en el tiempo a una aldea medieval, donde deben desenmascarar hombres lobo para volver a casa.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 134.294,
+                "posterPath": "https://image.tmdb.org/t/p/w342/pfSiYANe9z4Xot8DBYDjEFxr1PS.jpg",
+                "releaseDate": "2024-10-22",
+                "title": "Los hombres lobo",
+                "type": "file",
+                "voteAverage": 5.7
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 863873,
+                "backdropPath": "https://image.tmdb.org/t/p/original/vbAIe8DgAfrhkfwK8uiujXQEIoZ.jpg",
+                "genres": [
+                    "Thriller",
+                    "Mystery",
+                    "Drama",
+                    "Science Fiction"
+                ],
+                "id": "1cLwx9fBIB8IlIBlP6vimuLwTw02KGPZX",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Los Horrores de Caddo Lake (2024) MAX WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "Cuando una ni\u00f1a de 8 a\u00f1os desaparece misteriosamente en el lago Caddo, una serie de muertes y desapariciones pasadas comienzan a conectarse, alterando para siempre la historia de una familia rota.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 108.458,
+                "posterPath": "https://image.tmdb.org/t/p/w342/wQSLDy6H3Wyhf7Z7TNM87y4giez.jpg",
+                "releaseDate": "2024-10-09",
+                "title": "Los Horrores de Caddo Lake",
+                "type": "file",
+                "voteAverage": 7.3
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1063877,
+                "backdropPath": "https://image.tmdb.org/t/p/original/6Rjsm5khNaYa4Gnw4iHnGX2E34T.jpg",
+                "genres": [
+                    "Thriller",
+                    "Horror"
+                ],
+                "id": "1zkuSyAkf5hPG80-DbJv3DSD62LmGGsmT",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "No te muevas (2024) WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "Una mujer en duelo encuentra a un asesino que le inyecta una poderosa droga que la deja paralizada. Cuando su cuerpo deja de responder, su lucha por sobrevivir empieza.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 381.677,
+                "posterPath": "https://image.tmdb.org/t/p/w342/5qqzdbfdp7LBL56WRW0RmSoEm12.jpg",
+                "releaseDate": "2024-10-24",
+                "title": "No te muevas",
+                "type": "file",
+                "voteAverage": 6.441
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1236419,
+                "backdropPath": "https://image.tmdb.org/t/p/original/oqWTbBixgF8XwqzGeFWMzkNwqAw.jpg",
+                "genres": [
+                    "Animation",
+                    "Music",
+                    "Documentary"
+                ],
+                "id": "1elzxunxjgcLbtA9g7vWZeIuZilaF7WXs",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Piece by Piece (2024) 1080p APTV WEB-DL Latino (1).mkv",
+                "overview": "Pharrell Williams: Pieza por Pieza es una experiencia cinematogr\u00e1fica \u00fanica que invita al p\u00fablico a un vibrante viaje a trav\u00e9s de la vida del \u00edcono cultural Pharrell Williams. Narrada a trav\u00e9s de la animaci\u00f3n de LEGO\u00ae, sube el volumen de tu imaginaci\u00f3n y s\u00e9 testigo de la evoluci\u00f3n de una de las mentes m\u00e1s innovadoras de la m\u00fasica.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 75.162,
+                "posterPath": "https://image.tmdb.org/t/p/w342/zCDI3HRvEO86MNdZA1paIqyzD38.jpg",
+                "releaseDate": "2024-10-10",
+                "title": "Pharrell Williams: Pieza por pieza",
+                "type": "file",
+                "voteAverage": 7.8
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1079091,
+                "backdropPath": "https://image.tmdb.org/t/p/original/zAqBIeO71BFL7bAtP5TFzVjVamy.jpg",
+                "genres": [
+                    "Romance",
+                    "Drama"
+                ],
+                "id": "1FSk8IfbxFQ8b_cd_jNdVxp5AHam0O1p_",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Romper El Circulo (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por - Cas].mkv",
+                "overview": "Una mujer atraviesa las tumultuosas etapas de una relaci\u00f3n abusiva. Tras mudarse a la ciudad de Boston despu\u00e9s de la universidad, decide iniciar su propio negocio como florista y se enamora de un joven neurocirujano.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 304.718,
+                "posterPath": "https://image.tmdb.org/t/p/w342/hvpQDMkfAbkiz8kxJOybcNSAq1j.jpg",
+                "releaseDate": "2024-08-07",
+                "title": "Romper el c\u00edrculo",
+                "type": "file",
+                "voteAverage": 7.2
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 254128,
+                "backdropPath": "https://image.tmdb.org/t/p/original/mMoG4nPSDupXIXOwVvpexZY2W0N.jpg",
+                "genres": [
+                    "Action",
+                    "Drama",
+                    "Thriller"
+                ],
+                "id": "1zpQ802zMZ_r4qn2fJtWPJlBJqMg2Dsyx",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "San Andreas (2015) MAX WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": "La falla de San Andr\u00e9s acaba cediendo ante las temibles fuerzas tel\u00faricas y desencadena un terremoto de magnitud 9 en California. Ante tal cat\u00e1strofe, el piloto de helic\u00f3ptero de b\u00fasqueda y rescate Ray y su ex esposa Emma viajan juntos desde Los \u00c1ngeles hasta San Francisco para salvar a su \u00fanica hija, Blake. Pero su tortuoso viaje hacia el norte solamente es el comienzo del desomoronamiento de todo lo que cre\u00edan firme en su vida.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 65.528,
+                "posterPath": "https://image.tmdb.org/t/p/w342/uC4uhJuyOxZQhMcJoKQWbe667Sx.jpg",
+                "releaseDate": "2015-05-27",
+                "title": "Terremoto: La Falla De San Andr\u00e9s",
+                "type": "file",
+                "voteAverage": 6.243
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 933260,
+                "backdropPath": "https://image.tmdb.org/t/p/original/7h6TqPB3ESmjuVbxCxAeB1c9OB1.jpg",
+                "genres": [
+                    "Drama",
+                    "Horror",
+                    "Science Fiction"
+                ],
+                "id": "1r4Ykl_u0ohUB1rnHBTv_SMBIwozQfz1M",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "The Substance (2024) 1080p APTV WEB-DL Latino.mkv",
+                "overview": "Elisabeth Sparkle, una celebridad en decadencia, decide usar una droga del mercado negro que replica c\u00e9lulas y crea temporalmente una versi\u00f3n m\u00e1s joven y mejor de ella misma.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 1529.207,
+                "posterPath": "https://image.tmdb.org/t/p/w342/w1PiIqM89r4AM7CiMEP4VLCEFUn.jpg",
+                "releaseDate": "2024-09-07",
+                "title": "La sustancia",
+                "type": "file",
+                "voteAverage": 7.3
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1184918,
+                "backdropPath": "https://image.tmdb.org/t/p/original/v9acaWVVFdZT5yAU7J2QjwfhXyD.jpg",
+                "genres": [
+                    "Animation",
+                    "Science Fiction",
+                    "Family"
+                ],
+                "id": "1oohNHjCNu7CFbP8vWipdHhU203N-nXqC",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "The Wild Robot (2024) 1080p APTV WEB-DL Latino.mkv",
+                "overview": "Un robot - ROZZUM unidad 7134, \"Roz\" para abreviar - naufraga en una isla deshabitada y debe aprender a adaptarse al duro entorno, estableciendo gradualmente relaciones con los animales de la isla y convirti\u00e9ndose en la madre adoptiva de un ganso hu\u00e9rfano.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 2009.639,
+                "posterPath": "https://image.tmdb.org/t/p/w342/a0a7RC01aTa7pOnskgJb3mCD2Ba.jpg",
+                "releaseDate": "2024-09-12",
+                "title": "Robot salvaje",
+                "type": "file",
+                "voteAverage": 8.5
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 1029955,
+                "backdropPath": "https://image.tmdb.org/t/p/original/aX1P75MWK5BzjqPh8fR8HQoX27s.jpg",
+                "genres": [
+                    "Drama",
+                    "Comedy"
+                ],
+                "id": "1CskSfKeOBbM6-CvAxDwohZGVSoyOlB0G",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Tipos De Gentileza (2024) DSNP WEB-DL [1080p] [Lat - Ing - Cas].mkv",
+                "overview": "F\u00e1bula en forma de tr\u00edptico que narra tres historias: la de un hombre atrapado que intenta tomar las riendas de su propia vida; la de un polic\u00eda aterrado porque su mujer, que hab\u00eda desaparecido en el mar, ha vuelto y parece otra persona; y la de una mujer decidida a encontrar a alguien con un don especial, destinado a convertirse en un prodigioso l\u00edder espiritual.",
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 70.486,
+                "posterPath": "https://image.tmdb.org/t/p/w342/7M8gZDAQsJP3BjibSt1kZ1tBvXl.jpg",
+                "releaseDate": "2024-05-30",
+                "title": "Tipos de gentileza",
+                "type": "file",
+                "voteAverage": 6.576
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": null,
+                "backdropPath": null,
+                "genres": [],
+                "id": "1UtWSaeVXqDZftjfk8KSKyXEKdqM88GJ4",
+                "language": null,
+                "mimeType": "video/x-matroska",
+                "name": "Winnie Pooh Miel Y Sangre Parte 2 (2024) AMZN WEB-DL [1080p] [Lat - Ing - Por].mkv",
+                "overview": null,
+                "parents": [
+                    "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY"
+                ],
+                "popularity": 70.412,
+                "posterPath": null,
+                "releaseDate": "2024-01-01",
+                "title": "Winnie Pooh Miel Y Sangre Parte 2",
+                "type": "file",
+                "voteAverage": 0.0
+            }
+        ],
+        "id": "1V0GUR_RS5TNr3dBs23TzzbnNd2v9fAqY",
+        "kind": "drive#file",
+        "length": 30,
+        "mimeType": "application/vnd.google-apps.folder",
+        "name": "NuevasPeliculasAgregados",
+        "type": "directory"
+    },
+    {
+        "buildTime": "2024-11-15 17:58:35.296708",
+        "categoryInfo": {
+            "adult": false,
+            "anilist": false,
+            "id": "1iNIROGtcR9OZW9SaGMzzewygJeB-EkPB",
+            "language": "es-MX",
+            "name": "\ud83c\udf1f\ud83c\udfa5 Peliculas Estreno\ud83c\udfac",
+            "type": "Movies"
+        },
+        "children": [
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 700391,
+                "backdropPath": "https://image.tmdb.org/t/p/original/eEF40Xk2twM3WjRNZftfo771gjv.jpg",
+                "genres": [
+                    "Action",
+                    "Adventure",
+                    "Science Fiction"
+                ],
+                "id": "1PWLBkCvwd2Ap8ipbuG4F8qAO2Cv-yp2g",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "65 (2023) 1080p AMZN WEB-DL Latino.mkv",
+                "overview": "Despu\u00e9s de un catastr\u00f3fico accidente en un planeta desconocido, el piloto Mills descubre r\u00e1pidamente que realmente est\u00e1 varado en la Tierra\u2026 hace 65 millones de a\u00f1os. Ahora, con solo una oportunidad de rescate, Mills y la otra \u00fanica superviviente, Koa, deber\u00e1n abrirse camino a trav\u00e9s del desconocido territorio plagado con peligrosas criaturas prehist\u00f3ricas en una \u00e9pica lucha por sobrevivir.",
+                "parents": [
+                    "1hR8MLnZBn4xfNsAIB_2fZSN4c7WX3CQ9"
+                ],
+                "popularity": 50.567,
+                "posterPath": "https://image.tmdb.org/t/p/w342/dhqu9rInT9IOa2w0TU22YMEgGus.jpg",
+                "releaseDate": "2023-03-02",
+                "title": "65: Al borde de la extinci\u00f3n",
+                "type": "file",
+                "voteAverage": 5.985
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": null,
+                "backdropPath": null,
+                "genres": [],
+                "id": "1GudwadHGytwC8BibtYazBZ_pgaGocfUR",
+                "language": null,
+                "mimeType": "video/x-matroska",
+                "name": "[GDADICTOS.COM} Uncharted (2022) 1080p GPLAY WEB-DL Latino.mkv",
+                "overview": null,
+                "parents": [
+                    "1hR8MLnZBn4xfNsAIB_2fZSN4c7WX3CQ9"
+                ],
+                "popularity": 70.412,
+                "posterPath": null,
+                "releaseDate": "2022-01-01",
+                "title": "[GDADICTOS.COM} Uncharted",
+                "type": "file",
+                "voteAverage": 0.0
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 497698,
+                "backdropPath": "https://image.tmdb.org/t/p/original/dq18nCTTLpy9PmtzZI6Y2yAgdw5.jpg",
+                "genres": [
+                    "Action",
+                    "Adventure",
+                    "Science Fiction"
+                ],
+                "id": "1w9x6zjv0jprjZzkh-2lQvL9oY32CjKOq",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Black Widow (2021) 720p (1).mkv",
+                "overview": "Natasha Romanoff, tambi\u00e9n conocida como Black Widow, se enfrenta a lo m\u00e1s oscuro de sus cuentas pendientes cuando surge una peligrosa conspiraci\u00f3n que tiene lazos con su pasado. Perseguida por una fuerza que no se detendr\u00e1 ante nada para derribarla, debe lidiar con su historia como esp\u00eda y con las relaciones rotas que dej\u00f3 a su paso mucho antes de convertirse en parte de los Vengadores.",
+                "parents": [
+                    "1s2Ej3bIwQAF1aKDhvcc2Rw51Xum5ztIE"
+                ],
+                "popularity": 71.053,
+                "posterPath": "https://image.tmdb.org/t/p/w342/oggEsESyLjVGD7jbIdBfa2hFUrx.jpg",
+                "releaseDate": "2021-01-01",
+                "title": "Black Widow",
+                "type": "file",
+                "voteAverage": 7.232
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 497698,
+                "backdropPath": "https://image.tmdb.org/t/p/original/dq18nCTTLpy9PmtzZI6Y2yAgdw5.jpg",
+                "genres": [
+                    "Action",
+                    "Adventure",
+                    "Science Fiction"
+                ],
+                "id": "1TPgphpqI2HhfM1ip6p4eh70BEXq8reT4",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Black Widow (2021) 720p.mkv",
+                "overview": "Natasha Romanoff, tambi\u00e9n conocida como Black Widow, se enfrenta a lo m\u00e1s oscuro de sus cuentas pendientes cuando surge una peligrosa conspiraci\u00f3n que tiene lazos con su pasado. Perseguida por una fuerza que no se detendr\u00e1 ante nada para derribarla, debe lidiar con su historia como esp\u00eda y con las relaciones rotas que dej\u00f3 a su paso mucho antes de convertirse en parte de los Vengadores.",
+                "parents": [
+                    "1s2Ej3bIwQAF1aKDhvcc2Rw51Xum5ztIE"
+                ],
+                "popularity": 71.053,
+                "posterPath": "https://image.tmdb.org/t/p/w342/oggEsESyLjVGD7jbIdBfa2hFUrx.jpg",
+                "releaseDate": "2021-01-01",
+                "title": "Black Widow",
+                "type": "file",
+                "voteAverage": 7.232
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 508943,
+                "backdropPath": "https://image.tmdb.org/t/p/original/620hnMVLu6RSZW6a5rwO8gqpt0t.jpg",
+                "genres": [
+                    "Animation",
+                    "Comedy",
+                    "Fantasy",
+                    "Adventure",
+                    "Family"
+                ],
+                "id": "1eCGEsYHBwVXa8Z_KUGLDsCF27xb8zfwb",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Luca (2021) DSNY WEB-DL 1080p Latino.mkv",
+                "overview": "Un joven llamado Luca Paguro experimenta un verano inolvidable con su nuevo mejor amigo, Alberto Scorfano, en un hermoso pueblo al lado del mar en la Riviera, Italiana. Sin embargo, se ver\u00edan amenazados si se revela su gran secreto: ambos son monstruos marinos.",
+                "parents": [
+                    "1VCr__M-d_7IezEMci98vYz1GSrI_rKw0"
+                ],
+                "popularity": 76.145,
+                "posterPath": "https://image.tmdb.org/t/p/w342/dagjxde57bpFgiSDsfTDgLjzLyn.jpg",
+                "releaseDate": "2021-06-17",
+                "title": "Luca",
+                "type": "file",
+                "voteAverage": 7.8
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 508943,
+                "backdropPath": "https://image.tmdb.org/t/p/original/620hnMVLu6RSZW6a5rwO8gqpt0t.jpg",
+                "genres": [
+                    "Animation",
+                    "Comedy",
+                    "Fantasy",
+                    "Adventure",
+                    "Family"
+                ],
+                "id": "1zXad_hPNSrQAmez2bg0mmO9__nFqp9_M",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Luca (2021) DSNY WEB-DL 720p Latino.mkv",
+                "overview": "Un joven llamado Luca Paguro experimenta un verano inolvidable con su nuevo mejor amigo, Alberto Scorfano, en un hermoso pueblo al lado del mar en la Riviera, Italiana. Sin embargo, se ver\u00edan amenazados si se revela su gran secreto: ambos son monstruos marinos.",
+                "parents": [
+                    "1vwPkrKUofsBy8C1LiAb2Fl3o6uQO0XD_"
+                ],
+                "popularity": 76.145,
+                "posterPath": "https://image.tmdb.org/t/p/w342/dagjxde57bpFgiSDsfTDgLjzLyn.jpg",
+                "releaseDate": "2021-06-17",
+                "title": "Luca",
+                "type": "file",
+                "voteAverage": 7.8
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 379686,
+                "backdropPath": "https://image.tmdb.org/t/p/original/8s4h9friP6Ci3adRGahHARVd76E.jpg",
+                "genres": [
+                    "Family",
+                    "Animation",
+                    "Comedy",
+                    "Science Fiction"
+                ],
+                "id": "1EniTJZXOyBlBomFysjI0xKp1n_FzSbvW",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Space Jam Una Nueva Era (2021) HMAX 1080p Latino (1).mkv",
+                "overview": "Con la ayuda de Bugs Bunny y la pandilla de los Looney Toons, la s\u00faper estrella de la NBA LeBron James tendr\u00e1 que rescatar a su hijo perdido navegando en muchas pel\u00edculas del cat\u00e1logo de Warner Bros mientras desaf\u00edan el plan del algoritmo de computadora llamado Al-G Ritmo para ganar un partido de baloncesto contra su equipo de compa\u00f1eros el cual ser\u00e1 visto por todo el mundo.",
+                "parents": [
+                    "15fYU7CUy2eD163jSTlW8va0fnzGtZ9Yu"
+                ],
+                "popularity": 40.955,
+                "posterPath": "https://image.tmdb.org/t/p/w342/1BjZAcj4oGokaIGoMDWh6njWzVr.jpg",
+                "releaseDate": "2021-07-08",
+                "title": "Space Jam: Una nueva era",
+                "type": "file",
+                "voteAverage": 6.7
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 379686,
+                "backdropPath": "https://image.tmdb.org/t/p/original/8s4h9friP6Ci3adRGahHARVd76E.jpg",
+                "genres": [
+                    "Family",
+                    "Animation",
+                    "Comedy",
+                    "Science Fiction"
+                ],
+                "id": "1uDNeRkOf3rpXHCO9Cz_g6kDUMCHu_7Tq",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "Space Jam Una Nueva Era (2021) HMAX 1080p Latino.mkv",
+                "overview": "Con la ayuda de Bugs Bunny y la pandilla de los Looney Toons, la s\u00faper estrella de la NBA LeBron James tendr\u00e1 que rescatar a su hijo perdido navegando en muchas pel\u00edculas del cat\u00e1logo de Warner Bros mientras desaf\u00edan el plan del algoritmo de computadora llamado Al-G Ritmo para ganar un partido de baloncesto contra su equipo de compa\u00f1eros el cual ser\u00e1 visto por todo el mundo.",
+                "parents": [
+                    "15fYU7CUy2eD163jSTlW8va0fnzGtZ9Yu"
+                ],
+                "popularity": 40.955,
+                "posterPath": "https://image.tmdb.org/t/p/w342/1BjZAcj4oGokaIGoMDWh6njWzVr.jpg",
+                "releaseDate": "2021-07-08",
+                "title": "Space Jam: Una nueva era",
+                "type": "file",
+                "voteAverage": 6.7
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 423108,
+                "backdropPath": "https://image.tmdb.org/t/p/original/qi6Edc1OPcyENecGtz8TF0DUr9e.jpg",
+                "genres": [
+                    "Horror",
+                    "Mystery",
+                    "Thriller"
+                ],
+                "id": "12FNVsTQ5M39IUYNozvd_N9HBiuyBpGo_",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "The Conjuring The Devil Made Me Do It (2021) HBOMAX WEB-DL 1080p Latino (1).mkv",
+                "overview": "Los investigadores de fen\u00f3menos paranormales Ed y Lorraine Warren se enfrentan a un nuevo caso: el de un hombre acusado de un terrible asesinato, que asegura haber sido pose\u00eddo por un demonio.",
+                "parents": [
+                    "1B3ZBoccXzZQXRlxVs6sEvnrcZa_xsonm"
+                ],
+                "popularity": 87.716,
+                "posterPath": "https://image.tmdb.org/t/p/w342/ghMQALCyytc6W0wlOlMIKiMSRKV.jpg",
+                "releaseDate": "2021-05-25",
+                "title": "El Conjuro 3: El diablo me oblig\u00f3 a hacerlo",
+                "type": "file",
+                "voteAverage": 7.429
+            },
+            {
+                "adult": false,
+                "api": "tmdb",
+                "apiId": 423108,
+                "backdropPath": "https://image.tmdb.org/t/p/original/qi6Edc1OPcyENecGtz8TF0DUr9e.jpg",
+                "genres": [
+                    "Horror",
+                    "Mystery",
+                    "Thriller"
+                ],
+                "id": "1V2SOrhFGbNe88ViSmyaZxhHWp3lHth8h",
+                "language": "en",
+                "mimeType": "video/x-matroska",
+                "name": "The Conjuring The Devil Made Me Do It (2021) HBOMAX WEB-DL 1080p Latino.mkv",
+                "overview": "Los investigadores de fen\u00f3menos paranormales Ed y Lorraine Warren se enfrentan a un nuevo caso: el de un hombre acusado de un terrible asesinato, que asegura haber sido pose\u00eddo por un demonio.",
+                "parents": [
+                    "1B3ZBoccXzZQXRlxVs6sEvnrcZa_xsonm"
+                ],
+                "popularity": 87.716,
+                "posterPath": "https://image.tmdb.org/t/p/w342/ghMQALCyytc6W0wlOlMIKiMSRKV.jpg",
+                "releaseDate": "2021-05-25",
+                "title": "El Conjuro 3: El diablo me oblig\u00f3 a hacerlo",
+                "type": "file",
+                "voteAverage": 7.429
+            },

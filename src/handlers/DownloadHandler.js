@@ -10,12 +10,12 @@ class DownloadHandler {
     this.progressMessages = new Map();
   }
 
-  async downloadAndSendVideo(chatId, movieId, itag, movieName) {
+  async downloadAndSendVideo(chatId, id, itag) {
     const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
     let updateInterval;
 
     try {
-      const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${encodeURIComponent(movieName)}?a=0&id=${movieId}&itag=${itag}`;
+      const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${id}?a=0&id=${id}&itag=${itag}`;
       
       const state = {
         startTime: Date.now(),
@@ -39,27 +39,24 @@ class DownloadHandler {
 
       const { stream, totalSize } = await downloader.start();
 
-      // Cambiar a fase de subida
       state.phase = 'upload';
       state.startTime = Date.now();
       state.downloadedBytes = 0;
       state.totalSize = totalSize;
 
-      // Crear un nuevo PassThrough stream para monitorear la subida
       const { PassThrough } = require('stream');
       const uploadStream = new PassThrough();
       let uploadedBytes = 0;
 
       stream.pipe(uploadStream);
 
-      // Monitorear el progreso de la subida
       uploadStream.on('data', (chunk) => {
         uploadedBytes += chunk.length;
         state.downloadedBytes = uploadedBytes;
       });
 
       await this.bot.sendVideo(chatId, uploadStream, {
-        caption: `🎬 ${movieName}`,
+        caption: `🎬 ${id}`,
         supports_streaming: true,
         duration: 0,
         width: itag === '37' ? 1920 : (itag === '22' ? 1280 : 640),

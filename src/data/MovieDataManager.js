@@ -22,7 +22,7 @@ class MovieDataManager {
       // Load movies
       if (fs.existsSync('./data/pelis.json')) {
         const rawMovieData = JSON.parse(fs.readFileSync('./data/pelis.json', 'utf8'));
-        this.movieData = this._processMovies(rawMovieData.movies || []);
+        this.movieData = this._processMovies(rawMovieData);
       } else {
         console.warn('pelis.json not found, initializing empty movie list');
         this.movieData = [];
@@ -31,7 +31,7 @@ class MovieDataManager {
       // Load series
       if (fs.existsSync('./data/series.json')) {
         const rawSeriesData = JSON.parse(fs.readFileSync('./data/series.json', 'utf8'));
-        this.seriesData = this._processSeries(rawSeriesData.series || []);
+        this.seriesData = this._processSeries(rawSeriesData);
       } else {
         console.warn('series.json not found, initializing empty series list');
         this.seriesData = [];
@@ -45,41 +45,81 @@ class MovieDataManager {
     }
   }
 
-  _processMovies(movies) {
-    return movies.map(movie => ({
-      id: movie.id,
-      title: movie.title || '',
-      name: movie.name || '',
-      path: movie.path || '',
-      type: 'movie'
-    }));
+  _processMovies(data) {
+    const movies = [];
+    data.forEach(category => {
+      if (category.children && Array.isArray(category.children)) {
+        category.children.forEach(movie => {
+          if (movie.type === 'file' || movie.mimeType?.includes('video')) {
+            movies.push({
+              id: movie.id,
+              title: movie.title || '',
+              name: movie.name || '',
+              overview: movie.overview || '',
+              posterPath: movie.posterPath || '',
+              backdropPath: movie.backdropPath || '',
+              releaseDate: movie.releaseDate || '',
+              genres: movie.genres || [],
+              voteAverage: movie.voteAverage || 0,
+              popularity: movie.popularity || 0,
+              type: 'movie',
+              categoryId: category.id,
+              apiId: movie.apiId || null
+            });
+          }
+        });
+      }
+    });
+    return movies;
   }
 
-  _processSeries(series) {
-    return series.map(show => ({
-      id: show.id,
-      title: show.title || '',
-      name: show.name || '',
-      type: 'series',
-      seasons: this._processSeasons(show.children || [])
-    }));
+  _processSeries(data) {
+    const series = [];
+    data.forEach(category => {
+      if (category.children && Array.isArray(category.children)) {
+        category.children.forEach(show => {
+          if (show.type === 'directory' && show.children) {
+            const seriesObj = {
+              id: show.id,
+              title: show.title || '',
+              name: show.name || '',
+              overview: show.overview || '',
+              posterPath: show.posterPath || '',
+              backdropPath: show.backdropPath || '',
+              releaseDate: show.releaseDate || '',
+              genres: show.genres || [],
+              voteAverage: show.voteAverage || 0,
+              popularity: show.popularity || 0,
+              type: 'series',
+              categoryId: category.id,
+              apiId: show.apiId || null,
+              seasons: this._processSeasons(show.children, show.id)
+            };
+            series.push(seriesObj);
+          }
+        });
+      }
+    });
+    return series;
   }
 
-  _processSeasons(seasons) {
+  _processSeasons(seasons, seriesId) {
     return seasons.map(season => ({
       id: season.id,
-      name: season.name || '',
-      episodes: this._processEpisodes(season.children || [])
+      name: season.name,
+      seriesId: seriesId,
+      episodes: this._processEpisodes(season.children || [], season.id)
     }));
   }
 
-  _processEpisodes(episodes) {
-    return episodes.filter(episode => episode.type === 'file')
+  _processEpisodes(episodes, seasonId) {
+    return episodes
+      .filter(episode => episode.type === 'file')
       .map(episode => ({
         id: episode.id,
-        name: episode.name || '',
-        path: episode.path || '',
-        type: 'episode'
+        name: episode.name,
+        seasonId: seasonId,
+        mimeType: episode.mimeType
       }));
   }
 
@@ -102,11 +142,14 @@ class MovieDataManager {
       // TMDB Search
       const tmdbResults = await this._searchTMDB(query, type);
       
-      // Local Search
-      const localResults = this._searchLocal(query, type);
+      // Local Search with TMDB results
+      const tmdbLocalResults = await this._searchLocalByTMDB(tmdbResults, type);
+      
+      // Direct Local Search with query
+      const directLocalResults = this._searchLocalByQuery(query, type);
       
       // Combine and deduplicate results
-      const combinedResults = this._combineResults(tmdbResults, localResults, type);
+      const combinedResults = this._combineResults(tmdbResults, tmdbLocalResults, directLocalResults);
       
       console.log(`Found ${combinedResults.length} results`);
       return combinedResults;
@@ -131,7 +174,8 @@ class MovieDataManager {
         title: item.title || item.name,
         overview: item.overview,
         poster_path: item.poster_path,
-        type: type
+        type: type,
+        release_date: item.release_date || item.first_air_date
       }));
     } catch (error) {
       console.error('TMDB search error:', error);
@@ -139,7 +183,31 @@ class MovieDataManager {
     }
   }
 
-  _searchLocal(query, type) {
+  _searchLocalByTMDB(tmdbResults, type) {
+    const localResults = [];
+    const searchData = type === 'movie' ? this.movieData : this.seriesData;
+    
+    tmdbResults.forEach(tmdbItem => {
+      const matches = searchData.filter(item => {
+        const titleMatch = item.title?.toLowerCase() === tmdbItem.title?.toLowerCase();
+        const nameMatch = item.name?.toLowerCase() === tmdbItem.title?.toLowerCase();
+        const apiIdMatch = item.apiId === tmdbItem.tmdbId;
+        return titleMatch || nameMatch || apiIdMatch;
+      });
+      
+      matches.forEach(match => {
+        localResults.push({
+          ...match,
+          tmdbInfo: tmdbItem,
+          matchType: 'tmdb'
+        });
+      });
+    });
+    
+    return localResults;
+  }
+
+  _searchLocalByQuery(query, type) {
     const searchData = type === 'movie' ? this.movieData : this.seriesData;
     const results = [];
     
@@ -152,6 +220,7 @@ class MovieDataManager {
       if (title.includes(lowercaseQuery) || name.includes(lowercaseQuery)) {
         results.push({
           ...item,
+          matchType: 'direct',
           score: title === lowercaseQuery || name === lowercaseQuery ? 0 : 0.1
         });
       }
@@ -164,6 +233,7 @@ class MovieDataManager {
         .filter(result => result.score < 0.4)
         .map(result => ({
           ...result.item,
+          matchType: 'fuzzy',
           score: result.score
         }));
       
@@ -173,38 +243,44 @@ class MovieDataManager {
     return results;
   }
 
-  _combineResults(tmdbResults, localResults, type) {
+  _combineResults(tmdbResults, tmdbLocalResults, directLocalResults) {
     const combined = new Map();
     
-    // Add local results
-    localResults.forEach(item => {
-      const key = (item.title || item.name).toLowerCase();
+    // Add TMDB-matched local results first (highest priority)
+    tmdbLocalResults.forEach(item => {
+      const key = `${item.title || item.name}-${item.id}`.toLowerCase();
       if (!combined.has(key)) {
         combined.set(key, {
           ...item,
           hasLocal: true,
-          hasTMDB: false
+          hasTMDB: true,
+          priority: 1
         });
       }
     });
     
-    // Add TMDB results
-    tmdbResults.forEach(item => {
-      const key = item.title.toLowerCase();
-      if (combined.has(key)) {
-        // Merge with existing local result
-        const existing = combined.get(key);
+    // Add direct local results
+    directLocalResults.forEach(item => {
+      const key = `${item.title || item.name}-${item.id}`.toLowerCase();
+      if (!combined.has(key)) {
         combined.set(key, {
-          ...existing,
-          hasTMDB: true,
-          tmdbInfo: item
+          ...item,
+          hasLocal: true,
+          hasTMDB: false,
+          priority: 2
         });
-      } else {
-        // Add new TMDB-only result
+      }
+    });
+    
+    // Add remaining TMDB results
+    tmdbResults.forEach(item => {
+      const key = `${item.title}-${item.tmdbId}`.toLowerCase();
+      if (!combined.has(key)) {
         combined.set(key, {
           ...item,
           hasLocal: false,
-          hasTMDB: true
+          hasTMDB: true,
+          priority: 3
         });
       }
     });
@@ -212,13 +288,11 @@ class MovieDataManager {
     // Convert to array and sort
     return Array.from(combined.values())
       .sort((a, b) => {
-        // Prioritize items that exist both locally and in TMDB
-        if (a.hasLocal && a.hasTMDB && (!b.hasLocal || !b.hasTMDB)) return -1;
-        if (b.hasLocal && b.hasTMDB && (!a.hasLocal || !a.hasTMDB)) return 1;
-        // Then prioritize local items
-        if (a.hasLocal && !b.hasLocal) return -1;
-        if (b.hasLocal && !a.hasLocal) return 1;
-        // Finally sort by score if available
+        // Sort by priority first
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        // Then by score if available
         return (a.score || 0) - (b.score || 0);
       });
   }

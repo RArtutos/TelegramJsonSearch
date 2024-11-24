@@ -10,72 +10,33 @@ class MovieHandler {
 
   async handleSearch(chatId, searchQuery) {
     if (searchQuery.length < 2) {
-      this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
+      await this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
       return;
     }
 
     try {
-      const tmdbResults = await this.searchTMDB(searchQuery);
-      if (tmdbResults.length === 0) {
-        this.bot.sendMessage(chatId, '❌ No se encontraron resultados en TMDB.');
-        return;
-      }
-
-      const localResults = [];
-      for (const tmdbItem of tmdbResults) {
-        const localItems = this.findInLocalData(tmdbItem.title);
-        if (localItems.length > 0) {
-          localResults.push(...localItems.map(item => ({
-            ...item,
-            tmdbInfo: tmdbItem
-          })));
-        }
-      }
-
-      if (localResults.length === 0) {
-        this.bot.sendMessage(chatId, '❌ No se encontraron películas disponibles.');
+      const results = await this.movieDataManager.searchContent(searchQuery, 'movie');
+      
+      if (results.length === 0) {
+        await this.bot.sendMessage(chatId, '❌ No se encontraron películas.');
         return;
       }
 
       this.userStates.set(chatId, {
-        results: localResults,
+        results,
         page: 0,
-        totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE)
+        totalPages: Math.ceil(results.length / this.ITEMS_PER_PAGE),
+        navigationStack: []
       });
 
-      this.sendResultsPage(chatId);
+      await this.sendResultsPage(chatId);
     } catch (error) {
       console.error('Error searching movies:', error);
-      this.bot.sendMessage(chatId, '❌ Error al buscar películas. Intenta de nuevo.');
+      await this.bot.sendMessage(chatId, '❌ Error al buscar películas. Intenta de nuevo.');
     }
   }
 
-  async searchTMDB(query) {
-    const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
-      params: {
-        api_key: process.env.TMDB_API_KEY,
-        query,
-        language: 'es-MX'
-      }
-    });
-    return response.data.results;
-  }
-
-  findInLocalData(tmdbTitle) {
-    const items = [];
-    for (const category of this.movieDataManager.movieData) {
-      if (category.children) {
-        for (const movie of category.children) {
-          if (movie.title?.toLowerCase() === tmdbTitle.toLowerCase()) {
-            items.push(movie);
-          }
-        }
-      }
-    }
-    return items;
-  }
-
-  sendResultsPage(chatId) {
+  async sendResultsPage(chatId) {
     const state = this.userStates.get(chatId);
     if (!state) return;
 
@@ -83,29 +44,37 @@ class MovieHandler {
     const end = Math.min(start + this.ITEMS_PER_PAGE, state.results.length);
     const currentResults = state.results.slice(start, end);
 
-    const keyboard = currentResults.map(result => [{
-      text: `🎬 ${result.name || result.title}`,
-      callback_data: `movie_${result.id}`
-    }]);
+    const keyboard = currentResults.map(result => {
+      const icon = result.hasLocal ? '🎬' : '🔍';
+      const title = result.title || result.name;
+      const status = result.hasLocal ? ' (Disponible)' : ' (Info)';
+      return [{
+        text: `${icon} ${title}${status}`,
+        callback_data: `movie_${result.id || result.tmdbId}`
+      }];
+    });
 
-    const navButtons = [];
-    if (state.page > 0) {
-      navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_movie' });
-    }
-    if (state.page < state.totalPages - 1) {
-      navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_movie' });
-    }
-    
-    if (navButtons.length > 0) {
+    if (state.page > 0 || state.page < state.totalPages - 1) {
+      const navButtons = [];
+      if (state.page > 0) {
+        navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_movie' });
+      }
+      if (state.page < state.totalPages - 1) {
+        navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_movie' });
+      }
       keyboard.push(navButtons);
     }
 
     const message = `🎬 Películas (${start + 1}-${end} de ${state.results.length})\n` +
                    `📄 Página ${state.page + 1} de ${state.totalPages}`;
 
-    this.bot.sendMessage(chatId, message, {
-      reply_markup: { inline_keyboard: keyboard }
-    });
+    try {
+      await this.bot.sendMessage(chatId, message, {
+        reply_markup: { inline_keyboard: keyboard }
+      });
+    } catch (error) {
+      console.error('Error sending results page:', error);
+    }
   }
 
   async handleCallback(query) {
@@ -113,10 +82,15 @@ class MovieHandler {
     const messageId = query.message.message_id;
     const data = query.data;
 
-    if (data.startsWith('prev_movie') || data.startsWith('next_movie')) {
-      await this.handlePageNavigation(chatId, messageId, data);
-    } else if (data.startsWith('movie_')) {
-      await this.handleMovieSelection(chatId, data);
+    try {
+      if (data === 'prev_movie' || data === 'next_movie') {
+        await this.handlePageNavigation(chatId, messageId, data);
+      } else if (data.startsWith('movie_')) {
+        await this.handleMovieSelection(chatId, data);
+      }
+    } catch (error) {
+      console.error('Error handling movie callback:', error);
+      await this.bot.sendMessage(chatId, '❌ Error al procesar la selección.');
     }
   }
 
@@ -128,7 +102,7 @@ class MovieHandler {
     
     try {
       await this.bot.deleteMessage(chatId, messageId);
-      this.sendResultsPage(chatId);
+      await this.sendResultsPage(chatId);
     } catch (error) {
       console.error('Error in movie page navigation:', error);
     }
@@ -136,9 +110,15 @@ class MovieHandler {
 
   async handleMovieSelection(chatId, data) {
     const movieId = data.split('_')[1];
-    const movie = this.movieDataManager.getMovieById(movieId);
+    const state = this.userStates.get(chatId);
+    const movie = state?.results.find(m => (m.id || m.tmdbId) === movieId);
     
-    if (movie) {
+    if (!movie) {
+      await this.bot.sendMessage(chatId, '❌ Película no encontrada.');
+      return;
+    }
+
+    if (movie.hasLocal) {
       const qualities = [
         { label: '🎬 1080p HD', itag: '37' },
         { label: '🎥 720p HD', itag: '22' },
@@ -150,15 +130,31 @@ class MovieHandler {
         callback_data: `download_${movie.id}_${quality.itag}`
       }));
 
-      const message = `🎬 *${movie.name}*\n` +
-                     `${movie.overview ? `📝 ${movie.overview}\n\n` : ''}` +
+      const message = `🎬 *${movie.title || movie.name}*\n` +
+                     `${movie.tmdbInfo?.overview ? `📝 ${movie.tmdbInfo.overview}\n\n` : ''}` +
                      `Selecciona la calidad de descarga:`;
       
       await this.bot.sendMessage(chatId, message, {
         reply_markup: { inline_keyboard: [buttons] },
         parse_mode: 'Markdown'
       });
+    } else {
+      const message = `🎬 *${movie.title}*\n` +
+                     `${movie.overview ? `📝 ${movie.overview}\n\n` : ''}` +
+                     `⚠️ Esta película no está disponible actualmente.`;
+      
+      await this.bot.sendMessage(chatId, message, {
+        parse_mode: 'Markdown'
+      });
     }
+  }
+
+  getUserState(chatId) {
+    return this.userStates.get(chatId);
+  }
+
+  updateUserState(chatId, newState) {
+    this.userStates.set(chatId, newState);
   }
 }
 

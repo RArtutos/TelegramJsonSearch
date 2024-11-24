@@ -1,23 +1,16 @@
 {
-  "name": "movie-series-telegram-bot",
+  "name": "telegram-movie-bot",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest"
+    "start": "node src/index.js"
   },
   "dependencies": {
-    "axios": "^1.6.2",
-    "dotenv": "^16.3.1",
     "node-telegram-bot-api": "^0.64.0",
-    "winston": "^3.11.0",
-    "progress": "^2.0.3",
-    "p-queue": "^7.4.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0"
+    "dotenv": "^16.3.1",
+    "fuse.js": "^7.0.0",
+    "axios": "^1.6.2",
+    "p-limit": "^3.1.0",
+    "async": "^3.2.4"
   }
 }

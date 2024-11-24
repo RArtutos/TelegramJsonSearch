@@ -10,33 +10,76 @@ class SeriesHandler {
 
   async handleSearch(chatId, searchQuery) {
     if (searchQuery.length < 2) {
-      await this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
+      this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
       return;
     }
 
     try {
-      const results = await this.movieDataManager.searchContent(searchQuery, 'series');
-      
-      if (results.length === 0) {
-        await this.bot.sendMessage(chatId, '❌ No se encontraron series.');
+      const tmdbResults = await this.searchTMDB(searchQuery);
+      if (tmdbResults.length === 0) {
+        this.bot.sendMessage(chatId, '❌ No se encontraron resultados en TMDB.');
+        return;
+      }
+
+      const localResults = [];
+      for (const tmdbItem of tmdbResults) {
+        const localItems = this.findInLocalData(tmdbItem.name);
+        if (localItems.length > 0) {
+          localResults.push(...localItems.map(item => ({
+            ...item,
+            tmdbInfo: tmdbItem
+          })));
+        }
+      }
+
+      if (localResults.length === 0) {
+        this.bot.sendMessage(chatId, '❌ No se encontraron series disponibles.');
         return;
       }
 
       this.userStates.set(chatId, {
-        results,
+        results: localResults,
         page: 0,
-        totalPages: Math.ceil(results.length / this.ITEMS_PER_PAGE),
-        navigationStack: []
+        totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE)
       });
 
-      await this.sendResultsPage(chatId);
+      this.sendResultsPage(chatId);
     } catch (error) {
       console.error('Error searching series:', error);
-      await this.bot.sendMessage(chatId, '❌ Error al buscar series. Intenta de nuevo.');
+      this.bot.sendMessage(chatId, '❌ Error al buscar series. Intenta de nuevo.');
     }
   }
 
-  async sendResultsPage(chatId) {
+  async searchTMDB(query) {
+    const response = await axios.get('https://api.themoviedb.org/3/search/tv', {
+      params: {
+        api_key: process.env.TMDB_API_KEY,
+        query,
+        language: 'es-MX'
+      }
+    });
+    return response.data.results;
+  }
+
+  findInLocalData(tmdbTitle) {
+    const items = [];
+    for (const category of this.movieDataManager.seriesData) {
+      if (category.children) {
+        for (const series of category.children) {
+          if (series.title?.toLowerCase() === tmdbTitle.toLowerCase() || 
+              series.name?.toLowerCase() === tmdbTitle.toLowerCase()) {
+            items.push({
+              ...series,
+              seasons: this.movieDataManager.getSeasons(series.id)
+            });
+          }
+        }
+      }
+    }
+    return items;
+  }
+
+  sendResultsPage(chatId) {
     const state = this.userStates.get(chatId);
     if (!state) return;
 
@@ -44,37 +87,29 @@ class SeriesHandler {
     const end = Math.min(start + this.ITEMS_PER_PAGE, state.results.length);
     const currentResults = state.results.slice(start, end);
 
-    const keyboard = currentResults.map(result => {
-      const icon = result.hasLocal ? '📺' : '🔍';
-      const name = result.name;
-      const status = result.hasLocal ? ' (Disponible)' : ' (Info)';
-      return [{
-        text: `${icon} ${name}${status}`,
-        callback_data: `series_${result.id}`
-      }];
-    });
+    const keyboard = currentResults.map(result => [{
+      text: `📺 ${result.name}`,
+      callback_data: `series_${result.id}`
+    }]);
 
-    if (state.page > 0 || state.page < state.totalPages - 1) {
-      const navButtons = [];
-      if (state.page > 0) {
-        navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_series' });
-      }
-      if (state.page < state.totalPages - 1) {
-        navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_series' });
-      }
+    const navButtons = [];
+    if (state.page > 0) {
+      navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_series' });
+    }
+    if (state.page < state.totalPages - 1) {
+      navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_series' });
+    }
+    
+    if (navButtons.length > 0) {
       keyboard.push(navButtons);
     }
 
     const message = `📺 Series (${start + 1}-${end} de ${state.results.length})\n` +
                    `📄 Página ${state.page + 1} de ${state.totalPages}`;
 
-    try {
-      await this.bot.sendMessage(chatId, message, {
-        reply_markup: { inline_keyboard: keyboard }
-      });
-    } catch (error) {
-      console.error('Error sending results page:', error);
-    }
+    this.bot.sendMessage(chatId, message, {
+      reply_markup: { inline_keyboard: keyboard }
+    });
   }
 
   async handleCallback(query) {
@@ -82,19 +117,14 @@ class SeriesHandler {
     const messageId = query.message.message_id;
     const data = query.data;
 
-    try {
-      if (data === 'prev_series' || data === 'next_series') {
-        await this.handlePageNavigation(chatId, messageId, data);
-      } else if (data.startsWith('series_')) {
-        await this.handleSeriesSelection(chatId, data);
-      } else if (data.startsWith('season_')) {
-        await this.handleSeasonSelection(chatId, data);
-      } else if (data.startsWith('episode_')) {
-        await this.handleEpisodeSelection(chatId, data);
-      }
-    } catch (error) {
-      console.error('Error handling series callback:', error);
-      await this.bot.sendMessage(chatId, '❌ Error al procesar la selección.');
+    if (data.startsWith('prev_series') || data.startsWith('next_series')) {
+      await this.handlePageNavigation(chatId, messageId, data);
+    } else if (data.startsWith('series_')) {
+      await this.handleSeriesSelection(chatId, data);
+    } else if (data.startsWith('season_')) {
+      await this.handleSeasonSelection(chatId, data);
+    } else if (data.startsWith('episode_')) {
+      await this.handleEpisodeSelection(chatId, data);
     }
   }
 
@@ -106,7 +136,7 @@ class SeriesHandler {
     
     try {
       await this.bot.deleteMessage(chatId, messageId);
-      await this.sendResultsPage(chatId);
+      this.sendResultsPage(chatId);
     } catch (error) {
       console.error('Error in series page navigation:', error);
     }
@@ -114,51 +144,41 @@ class SeriesHandler {
 
   async handleSeriesSelection(chatId, data) {
     const seriesId = data.split('_')[1];
-    const state = this.userStates.get(chatId);
-    const series = state?.results.find(s => s.id === seriesId);
+    const series = this.movieDataManager.findSeriesById(seriesId);
     
-    if (!series) {
-      await this.bot.sendMessage(chatId, '❌ Serie no encontrada.');
-      return;
+    if (series) {
+      const seasons = this.movieDataManager.getSeasons(seriesId);
+      const keyboard = seasons.map(season => [{
+        text: `📺 ${season.name}`,
+        callback_data: `season_${season.id}`
+      }]);
+
+      const message = `📺 *${series.name}*\n` +
+                     `${series.overview ? `📝 ${series.overview}\n\n` : ''}` +
+                     `Selecciona una temporada:`;
+
+      await this.bot.sendMessage(chatId, message, {
+        reply_markup: { inline_keyboard: keyboard },
+        parse_mode: 'Markdown'
+      });
     }
-
-    const seasons = this.movieDataManager.getSeasons(series.id);
-    if (!seasons || seasons.length === 0) {
-      await this.bot.sendMessage(chatId, '❌ No hay temporadas disponibles para esta serie.');
-      return;
-    }
-
-    const keyboard = seasons.map(season => [{
-      text: `📺 ${season.name}`,
-      callback_data: `season_${season.id}`
-    }]);
-
-    const message = `📺 *${series.name}*\n` +
-                   `Selecciona una temporada:`;
-
-    await this.bot.sendMessage(chatId, message, {
-      reply_markup: { inline_keyboard: keyboard },
-      parse_mode: 'Markdown'
-    });
   }
 
   async handleSeasonSelection(chatId, data) {
     const seasonId = data.split('_')[1];
+    const season = this.movieDataManager.findSeasonById(seasonId);
     const episodes = this.movieDataManager.getEpisodes(seasonId);
     
-    if (!episodes || episodes.length === 0) {
-      await this.bot.sendMessage(chatId, '❌ No hay episodios disponibles para esta temporada.');
-      return;
+    if (episodes.length > 0) {
+      const keyboard = episodes.map(episode => [{
+        text: `📺 ${episode.name}`,
+        callback_data: `episode_${episode.id}`
+      }]);
+
+      await this.bot.sendMessage(chatId, `🎬 ${season.name}\nSelecciona un episodio:`, {
+        reply_markup: { inline_keyboard: keyboard }
+      });
     }
-
-    const keyboard = episodes.map(episode => [{
-      text: `📺 ${episode.name}`,
-      callback_data: `episode_${episode.id}`
-    }]);
-
-    await this.bot.sendMessage(chatId, 'Selecciona un episodio:', {
-      reply_markup: { inline_keyboard: keyboard }
-    });
   }
 
   async handleEpisodeSelection(chatId, data) {
@@ -177,14 +197,6 @@ class SeriesHandler {
     await this.bot.sendMessage(chatId, '📊 Selecciona la calidad:', {
       reply_markup: { inline_keyboard: [buttons] }
     });
-  }
-
-  getUserState(chatId) {
-    return this.userStates.get(chatId);
-  }
-
-  updateUserState(chatId, newState) {
-    this.userStates.set(chatId, newState);
   }
 }
 

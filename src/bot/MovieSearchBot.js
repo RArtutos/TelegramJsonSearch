@@ -1,88 +1,69 @@
 const TelegramBot = require('node-telegram-bot-api');
 const MovieDataManager = require('../data/MovieDataManager');
-const SearchHandler = require('../handlers/SearchHandler');
+const MovieHandler = require('../handlers/MovieHandler');
+const SeriesHandler = require('../handlers/SeriesHandler');
 const DownloadHandler = require('../handlers/DownloadHandler');
 
 class MovieSearchBot {
   constructor() {
-    if (!process.env.TELEGRAM_BOT_TOKEN) {
-      throw new Error('TELEGRAM_BOT_TOKEN is required');
-    }
-
     this.bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
-      polling: true
+      polling: true,
+      baseApiUrl: process.env.LOCAL_API_URL,
+      apiRoot: process.env.LOCAL_API_URL
     });
 
-    this.dataManager = new MovieDataManager();
-    this.searchHandler = new SearchHandler(this.bot, this.dataManager);
-    this.downloadHandler = new DownloadHandler(this.bot, this.dataManager);
+    this.movieDataManager = new MovieDataManager();
+    this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
+    this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
+    this.downloadHandler = new DownloadHandler(this.bot);
 
-    this.initializeCommands();
+    this.initializeBot();
   }
 
-  initializeCommands() {
-    this.bot.onText(/^\/start$/, this.handleStart.bind(this));
-    this.bot.onText(/^\/movie\s+(.+)$/, this.handleMovieSearch.bind(this));
-    this.bot.onText(/^\/series\s+(.+)$/, this.handleSeriesSearch.bind(this));
-    this.bot.onText(/^\/help$/, this.handleHelp.bind(this));
-    this.bot.on('callback_query', this.handleCallback.bind(this));
-  }
+  initializeBot() {
+    this.bot.onText(/\/start/, (msg) => {
+      const chatId = msg.chat.id;
+      this.bot.sendMessage(chatId, 
+        '🎬 *Bienvenido al Buscador de Películas y Series*\n\n' +
+        'Usa los siguientes comandos:\n' +
+        '`/movie nombre` - Buscar películas\n' +
+        '`/series nombre` - Buscar series\n\n' +
+        'Ejemplo: `/movie matrix` o `/series breaking bad`',
+        { parse_mode: 'Markdown' }
+      );
+    });
 
-  async handleStart(msg) {
-    const chatId = msg.chat.id;
-    const message = 
-      '🎬 *Bienvenido al Buscador de Películas y Series*\n\n' +
-      'Comandos disponibles:\n' +
-      '`/movie nombre` - Buscar películas\n' +
-      '`/series nombre` - Buscar series\n' +
-      '`/help` - Ver ayuda';
+    this.bot.onText(/\/movie (.+)/, (msg, match) => {
+      this.movieHandler.handleSearch(msg.chat.id, match[1]);
+    });
 
-    await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-  }
+    this.bot.onText(/\/series (.+)/, (msg, match) => {
+      this.seriesHandler.handleSearch(msg.chat.id, match[1]);
+    });
 
-  async handleMovieSearch(msg, match) {
-    const chatId = msg.chat.id;
-    const query = match[1];
-    await this.searchHandler.handleSearch(chatId, query, 'movie');
-  }
-
-  async handleSeriesSearch(msg, match) {
-    const chatId = msg.chat.id;
-    const query = match[1];
-    await this.searchHandler.handleSearch(chatId, query, 'series');
-  }
-
-  async handleHelp(msg) {
-    const chatId = msg.chat.id;
-    const message = 
-      '📖 *Comandos Disponibles*\n\n' +
-      '`/movie nombre` - Buscar películas\n' +
-      '`/series nombre` - Buscar series\n' +
-      '`/help` - Mostrar esta ayuda\n\n' +
-      '*Calidades Disponibles:*\n' +
-      '• 1080p HD\n' +
-      '• 720p HD\n' +
-      '• 360p SD';
-
-    await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-  }
-
-  async handleCallback(query) {
-    try {
-      const data = query.data;
-      const chatId = query.message.chat.id;
-
-      await this.bot.answerCallbackQuery(query.id);
-
-      if (data.startsWith('download_')) {
-        const [_, id, quality] = data.split('_');
-        await this.downloadHandler.handleDownload(chatId, id, quality);
-      } else {
-        await this.searchHandler.handleCallback(query);
+    this.bot.on('callback_query', async (query) => {
+      try {
+        await this.bot.answerCallbackQuery(query.id);
+        
+        if (query.data.startsWith('movie_') || query.data.startsWith('prev_movie') || query.data.startsWith('next_movie')) {
+          await this.movieHandler.handleCallback(query);
+        } else if (query.data.startsWith('series_') || query.data.startsWith('season_') || 
+                   query.data.startsWith('episode_') || query.data.startsWith('prev_series') || 
+                   query.data.startsWith('next_series')) {
+          await this.seriesHandler.handleCallback(query);
+        } else if (query.data.startsWith('download_')) {
+          const [_, id, itag] = query.data.split('_');
+          await this.downloadHandler.downloadAndSendVideo(query.message.chat.id, id, itag);
+        }
+      } catch (error) {
+        console.error('Error handling callback:', error);
+        this.bot.sendMessage(query.message.chat.id, '❌ Ocurrió un error. Por favor, intenta de nuevo.');
       }
-    } catch (error) {
-      console.error('Callback error:', error);
-    }
+    });
+
+    this.bot.on('polling_error', (error) => {
+      console.error('Polling error:', error);
+    });
   }
 }
 

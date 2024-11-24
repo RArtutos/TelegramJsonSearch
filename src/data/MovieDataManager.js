@@ -1,183 +1,122 @@
 const fs = require('fs');
-const Fuse = require('fuse.js');
+const axios = require('axios');
 
 class MovieDataManager {
   constructor() {
-    this.movies = [];
-    this.series = [];
-    this.searchIndices = {
-      movies: null,
-      series: null
-    };
+    this.movieData = [];
+    this.seriesData = [];
     this.loadData();
   }
 
   loadData() {
     try {
-      console.log('Loading data from JSON files...');
-      const moviesPath = './data/pelis.json';
-      const seriesPath = './data/series.json';
-
-      if (fs.existsSync(moviesPath)) {
-        const rawMovies = JSON.parse(fs.readFileSync(moviesPath, 'utf8'));
-        this.movies = this.processMovies(rawMovies);
-      }
-
-      if (fs.existsSync(seriesPath)) {
-        const rawSeries = JSON.parse(fs.readFileSync(seriesPath, 'utf8'));
-        this.series = this.processSeries(rawSeries);
-      }
-
-      this.initializeSearchIndices();
-      console.log(`Loaded ${this.movies.length} movies and ${this.series.length} series`);
+      this.movieData = JSON.parse(fs.readFileSync('./data/pelis.json', 'utf8'));
+      this.seriesData = JSON.parse(fs.readFileSync('./data/series.json', 'utf8'));
+      console.log('Data loaded successfully');
     } catch (error) {
       console.error('Error loading data:', error);
-      this.movies = [];
-      this.series = [];
+      process.exit(1);
     }
   }
 
-  processMovies(data) {
-    const movies = [];
-    const processFolder = (folder) => {
-      if (folder.children) {
-        folder.children.forEach(item => {
-          if (item.type === 'file') {
-            movies.push({
-              id: item.id,
-              name: item.title || this.cleanName(item.name),
-              overview: item.overview,
-              posterPath: item.posterPath,
-              backdropPath: item.backdropPath,
-              releaseDate: item.releaseDate,
-              genres: item.genres,
-              voteAverage: item.voteAverage,
-              mimeType: item.mimeType
-            });
-          } else if (item.type === 'directory') {
-            processFolder(item);
-          }
-        });
-      }
-    };
-
-    processFolder(data);
-    return movies;
+  async searchTMDB(query, type = 'movie') {
+    try {
+      const response = await axios.get(`https://api.themoviedb.org/3/search/${type}`, {
+        params: {
+          api_key: process.env.TMDB_API_KEY,
+          query,
+          language: 'es-MX'
+        }
+      });
+      return response.data.results;
+    } catch (error) {
+      console.error('TMDB API error:', error);
+      return [];
+    }
   }
 
-  processSeries(data) {
-    const series = [];
-    const processFolder = (folder) => {
-      if (folder.type === 'directory' && folder.title) {
-        const seriesData = {
-          id: folder.id,
-          name: folder.title,
-          overview: folder.overview,
-          posterPath: folder.posterPath,
-          backdropPath: folder.backdropPath,
-          releaseDate: folder.releaseDate,
-          genres: folder.genres,
-          voteAverage: folder.voteAverage,
-          seasons: []
-        };
-
-        // Procesar las carpetas hijas como temporadas
-        if (folder.children) {
-          folder.children.forEach(child => {
-            if (child.type === 'directory') {
-              const seasonData = {
-                id: child.id,
-                name: child.name,
-                parentId: seriesData.id,
-                episodes: []
-              };
-
-              // Procesar los archivos como episodios
-              if (child.children) {
-                child.children.forEach(episode => {
-                  if (episode.type === 'file') {
-                    seasonData.episodes.push({
-                      id: episode.id,
-                      name: this.cleanName(episode.name),
-                      mimeType: episode.mimeType,
-                      parentId: seasonData.id
-                    });
-                  }
-                });
-              }
-
-              if (seasonData.episodes.length > 0) {
-                seriesData.seasons.push(seasonData);
-              }
+  findInLocalData(tmdbTitle, type = 'movie') {
+    const data = type === 'movie' ? this.movieData : this.seriesData;
+    const items = [];
+    
+    for (const category of data) {
+      if (category.children) {
+        for (const item of category.children) {
+          if (type === 'movie') {
+            if (item.title?.toLowerCase() === tmdbTitle.toLowerCase()) {
+              items.push(item);
             }
-          });
+          } else {
+            // Para series, buscar por nombre y título
+            if (item.title?.toLowerCase() === tmdbTitle.toLowerCase() || 
+                item.name?.toLowerCase() === tmdbTitle.toLowerCase()) {
+              items.push({
+                ...item,
+                seasons: this.getSeasons(item.id)
+              });
+            }
+          }
         }
-
-        if (seriesData.seasons.length > 0) {
-          series.push(seriesData);
-        }
-      } else if (folder.children) {
-        folder.children.forEach(item => processFolder(item));
       }
-    };
-
-    processFolder(data);
-    return series;
-  }
-
-  cleanName(name) {
-    return name
-      .replace(/\.[^/.]+$/, '')
-      .replace(/\b(480|720|1080)p\b/g, '')
-      .replace(/\bWEB-DL\b/g, '')
-      .replace(/\[.*?\]/g, '')
-      .replace(/\(.*?\)/g, '')
-      .replace(/S\d{2}E\d{2}/i, '') // Elimina marcadores de episodio
-      .trim();
-  }
-
-  initializeSearchIndices() {
-    const options = {
-      keys: ['name'],
-      threshold: 0.4
-    };
-
-    this.searchIndices.movies = new Fuse(this.movies, options);
-    this.searchIndices.series = new Fuse(this.series, options);
-  }
-
-  search(query, type) {
-    const index = this.searchIndices[type];
-    if (!index) return [];
-
-    return index.search(query).map(result => result.item);
-  }
-
-  getItem(id, type) {
-    const collection = type === 'movies' ? this.movies : this.series;
-    return collection.find(item => item.id === id);
+    }
+    
+    return items;
   }
 
   getSeasons(seriesId) {
-    const series = this.series.find(s => s.id === seriesId);
-    return series?.seasons || [];
+    const series = this.findSeriesById(seriesId);
+    if (!series || !series.children) return [];
+    return series.children.filter(child => 
+      child.type === 'directory' && 
+      child.name.toLowerCase().includes('season')
+    );
   }
 
   getEpisodes(seasonId) {
-    for (const series of this.series) {
-      for (const season of series.seasons) {
-        if (season.id === seasonId) {
-          return season.episodes;
+    for (const category of this.seriesData) {
+      for (const series of category.children || []) {
+        for (const season of series.children || []) {
+          if (season.id === seasonId && season.children) {
+            return season.children.filter(child => 
+              child.type === 'file' && 
+              child.mimeType?.includes('video')
+            );
+          }
         }
       }
     }
     return [];
   }
 
-  getSeriesFromSeasonId(seasonId) {
-    return this.series.find(series => 
-      series.seasons.some(season => season.id === seasonId)
-    );
+  findSeriesById(id) {
+    for (const category of this.seriesData) {
+      if (category.children) {
+        const series = category.children.find(s => s.id === id);
+        if (series) return series;
+      }
+    }
+    return null;
+  }
+
+  findSeasonById(id) {
+    for (const category of this.seriesData) {
+      for (const series of category.children || []) {
+        for (const season of series.children || []) {
+          if (season.id === id) return season;
+        }
+      }
+    }
+    return null;
+  }
+
+  getMovieById(id) {
+    for (const category of this.movieData) {
+      if (category.children) {
+        const movie = category.children.find(m => m.id === id);
+        if (movie) return movie;
+      }
+    }
+    return null;
   }
 }
 

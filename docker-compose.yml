@@ -4,24 +4,24 @@ services:
   bot:
     build: .
     volumes:
-      - ./data:/data
-      - ./logs:/app/logs
-      - ./downloads:/app/downloads
-    environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_API_URL=${TELEGRAM_API_URL}
-      - USE_LOCAL_API=${USE_LOCAL_API}
+      - ./data:/app/data
+      - ./.env:/app/.env
     restart: unless-stopped
+    environment:
+      - LOCAL_API_URL=http://telegram-api:8081
     depends_on:
       - telegram-api
 
   telegram-api:
     image: aiogram/telegram-bot-api:latest
     volumes:
-      - ./telegram-bot-api-data:/var/lib/telegram-bot-api
+      - telegram-api-data:/var/lib/telegram-bot-api
     environment:
       - TELEGRAM_API_ID=${TELEGRAM_API_ID}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_LOCAL=true
     ports:
       - "8081:8081"
-    restart: unless-stopped
+
+volumes:
+  telegram-api-data:

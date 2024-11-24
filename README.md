@@ -1,89 +1,106 @@
-# Telegram Movie & TV Shows Search Bot
+# Bot de Telegram para Gestión de Películas y Series
 
-Este bot de Telegram permite buscar películas y series en archivos JSON locales, utilizando TMDB para mejorar los resultados de búsqueda.
+Bot de Telegram que permite gestionar la descarga de películas y episodios de series desde archivos JSON y enviarlos a través de Telegram.
+
+## Características
+
+- Búsqueda de películas y series
+- Descarga de archivos en diferentes calidades (1080p, 720p, 360p)
+- Envío automático a Telegram
+- Soporte para archivos grandes (hasta 2000 MB)
+- Bot API Server local para mejor rendimiento
+- Monitoreo de progreso de descargas
+- Sistema de cola para gestionar múltiples descargas
+- Registro detallado de eventos y errores
 
 ## Requisitos
 
-- Docker
-- Docker Compose
+- Docker y Docker Compose
 - Token de Bot de Telegram
-- API Key de TMDB
-- Telegram API ID y Hash
+- API ID y Hash de Telegram
+- Archivos JSON con la estructura de películas y series en el directorio `/data`
 
-## Instrucciones de Instalación
+## Configuración del Bot API Server Local
 
-1. Crea un bot en Telegram usando [@BotFather](https://t.me/botfather) y obtén el token.
+1. Obtener API ID y Hash:
+   - Visita https://my.telegram.org/apps
+   - Crea una nueva aplicación
+   - Guarda el API ID y API Hash
 
-2. Obtén una API Key de [TMDB](https://www.themoviedb.org/settings/api)
-
-3. Obtén tus credenciales de Telegram:
-   - Ve a https://my.telegram.org/apps
-   - Inicia sesión y crea una aplicación
-   - Guarda el `api_id` y `api_hash`
-
-4. Crea una carpeta llamada `data` y coloca los archivos JSON:
+2. Configura las variables de entorno:
    ```bash
-   mkdir data
-   # Coloca pelis.json y series.json en la carpeta data
+   cp .env.example .env
+   ```
+   
+   Edita `.env` y configura:
+   ```
+   TELEGRAM_BOT_TOKEN=your_bot_token
+   TELEGRAM_API_URL=http://localhost:8081
+   USE_LOCAL_API=true
+   TELEGRAM_API_ID=your_api_id
+   TELEGRAM_API_HASH=your_api_hash
    ```
 
-5. Copia el archivo `.env.example` a `.env` y configura tus tokens:
-   ```bash
-   TELEGRAM_BOT_TOKEN=tu_token_aquí
-   TMDB_API_KEY=tu_api_key_aquí
-   TELEGRAM_API_ID=tu_api_id_aquí
-   TELEGRAM_API_HASH=tu_api_hash_aquí
-   LOCAL_API_URL=http://telegram-api:8081
-   ```
+## Instalación
 
-6. Construye y ejecuta el contenedor:
+1. Clonar el repositorio
+2. Configurar variables de entorno como se indicó arriba
+3. Crear directorios necesarios:
+   ```bash
+   mkdir data downloads
+   ```
+4. Agregar archivos JSON en el directorio `data`
+5. Iniciar los servicios:
    ```bash
    docker-compose up -d
    ```
 
-## Uso
+## Comandos del Bot
 
-1. Inicia una conversación con el bot en Telegram.
+- `/movie nombre` - Busca películas por nombre
+- `/series nombre` - Busca series por nombre
+- `/status` - Muestra todas las descargas activas
+- `/status ID` - Muestra el estado de una descarga específica
 
-2. Usa los comandos disponibles:
-   ```
-   /movie matrix    - Buscar películas
-   /series friends  - Buscar series
-   ```
+## Logs
 
-3. El bot mostrará una lista de resultados con botones.
-
-4. Para películas:
-   - Selecciona una película
-   - Elige la calidad deseada (1080p, 720p, 360p)
-
-5. Para series:
-   - Selecciona una serie
-   - Elige la temporada
-   - Selecciona el episodio
-   - Elige la calidad deseada
-
-## Características
-
-- Búsqueda integrada con TMDB
-- Soporte para archivos grandes (hasta 2GB)
-- Streaming de video en Telegram
-- Múltiples calidades de video
-- Soporte para películas y series
+Los logs se almacenan en el directorio `logs/`:
+- `error.log`: Errores y advertencias
+- `combined.log`: Todos los eventos
 
 ## Mantenimiento
 
-- Para ver los logs:
-  ```bash
-  docker-compose logs -f
-  ```
+Para reiniciar los servicios:
+```bash
+docker-compose restart
+```
 
-- Para reiniciar el bot:
-  ```bash
-  docker-compose restart
-  ```
+Para ver los logs:
+```bash
+docker-compose logs -f
+```
 
-- Para detener el bot:
-  ```bash
-  docker-compose down
-  ```
+## Estructura del Proyecto
+
+```
+.
+├── src/
+│   ├── commands/        # Comandos del bot
+│   ├── services/        # Servicios (descargas, búsqueda)
+│   └── utils/          # Utilidades (logger, validación)
+├── data/               # Archivos JSON (no incluidos)
+├── downloads/          # Directorio temporal de descargas
+├── logs/              # Logs generados
+├── telegram-bot-api-data/ # Datos del Bot API Server
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+## Ventajas del Bot API Server Local
+
+- Soporte para archivos de hasta 2000 MB
+- Mayor velocidad en transferencias
+- Sin límites de tamaño en descargas
+- Mejor manejo de recursos
+- Mayor control sobre la infraestructura

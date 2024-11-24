@@ -7,3 +7,19 @@ services:
       - ./data:/app/data
       - ./.env:/app/.env
     restart: unless-stopped
+    depends_on:
+      - telegram-api
+
+  telegram-api:
+    image: aiogram/telegram-bot-api:latest
+    volumes:
+      - telegram-api-data:/var/lib/telegram-bot-api
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_LOCAL=true
+    ports:
+      - "8081:8081"
+
+volumes:
+  telegram-api-data:

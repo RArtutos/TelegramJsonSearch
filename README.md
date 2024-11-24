@@ -1,28 +1,42 @@
-# Telegram Movie Search Bot
+# Telegram Movie & TV Shows Search Bot
 
-Este bot de Telegram permite buscar películas en un archivo JSON y proporciona enlaces de descarga en diferentes calidades.
+Este bot de Telegram permite buscar películas y series en archivos JSON locales, utilizando TMDB para mejorar los resultados de búsqueda.
 
 ## Requisitos
 
 - Docker
 - Docker Compose
 - Token de Bot de Telegram
+- API Key de TMDB
+- Telegram API ID y Hash
 
 ## Instrucciones de Instalación
 
 1. Crea un bot en Telegram usando [@BotFather](https://t.me/botfather) y obtén el token.
 
-2. Crea una carpeta llamada `data` y coloca el archivo `pelis.json` dentro:
+2. Obtén una API Key de [TMDB](https://www.themoviedb.org/settings/api)
+
+3. Obtén tus credenciales de Telegram:
+   - Ve a https://my.telegram.org/apps
+   - Inicia sesión y crea una aplicación
+   - Guarda el `api_id` y `api_hash`
+
+4. Crea una carpeta llamada `data` y coloca los archivos JSON:
    ```bash
    mkdir data
+   # Coloca pelis.json y series.json en la carpeta data
    ```
 
-3. Copia el archivo `.env.example` a `.env` y configura tu token:
+5. Copia el archivo `.env.example` a `.env` y configura tus tokens:
    ```bash
    TELEGRAM_BOT_TOKEN=tu_token_aquí
+   TMDB_API_KEY=tu_api_key_aquí
+   TELEGRAM_API_ID=tu_api_id_aquí
+   TELEGRAM_API_HASH=tu_api_hash_aquí
+   LOCAL_API_URL=http://telegram-api:8081
    ```
 
-4. Construye y ejecuta el contenedor:
+6. Construye y ejecuta el contenedor:
    ```bash
    docker-compose up -d
    ```
@@ -31,18 +45,31 @@ Este bot de Telegram permite buscar películas en un archivo JSON y proporciona 
 
 1. Inicia una conversación con el bot en Telegram.
 
-2. Usa el comando `/search` seguido del nombre de la película:
+2. Usa los comandos disponibles:
    ```
-   /search alien
+   /movie matrix    - Buscar películas
+   /series friends  - Buscar series
    ```
 
 3. El bot mostrará una lista de resultados con botones.
 
-4. Selecciona una película de la lista.
+4. Para películas:
+   - Selecciona una película
+   - Elige la calidad deseada (1080p, 720p, 360p)
 
-5. Elige la calidad deseada (1080p, 720p, 360p).
+5. Para series:
+   - Selecciona una serie
+   - Elige la temporada
+   - Selecciona el episodio
+   - Elige la calidad deseada
 
-6. El bot proporcionará el enlace de descarga.
+## Características
+
+- Búsqueda integrada con TMDB
+- Soporte para archivos grandes (hasta 2GB)
+- Streaming de video en Telegram
+- Múltiples calidades de video
+- Soporte para películas y series
 
 ## Mantenimiento
 

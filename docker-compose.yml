@@ -7,6 +7,8 @@ services:
       - ./data:/app/data
       - ./.env:/app/.env
     restart: unless-stopped
+    environment:
+      - LOCAL_API_URL=http://telegram-api:8081
     depends_on:
       - telegram-api
 

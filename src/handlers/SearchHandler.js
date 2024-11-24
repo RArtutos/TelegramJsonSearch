@@ -2,26 +2,46 @@ class SearchHandler {
   constructor(bot, movieDataManager) {
     this.bot = bot;
     this.movieDataManager = movieDataManager;
-    this.ITEMS_PER_PAGE = 10;
+    this.ITEMS_PER_PAGE = 5;
     this.userStates = new Map();
   }
 
-  handleSearch(chatId, searchQuery) {
+  async handleSearch(chatId, searchQuery, type = 'movie') {
     if (searchQuery.length < 2) {
       this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
       return;
     }
 
-    const searchResults = this.movieDataManager.searchMovies(searchQuery.toLowerCase());
-    if (searchResults.length === 0) {
-      this.bot.sendMessage(chatId, '❌ No se encontraron resultados. Intenta con otros términos de búsqueda.');
+    const tmdbResults = await this.movieDataManager.searchTMDB(searchQuery, type);
+    if (tmdbResults.length === 0) {
+      this.bot.sendMessage(chatId, '❌ No se encontraron resultados en TMDB.');
+      return;
+    }
+
+    const localResults = [];
+    for (const tmdbItem of tmdbResults) {
+      const localItems = this.movieDataManager.findInLocalData(
+        tmdbItem.title || tmdbItem.name, 
+        type
+      );
+      if (localItems.length > 0) {
+        localResults.push(...localItems.map(item => ({
+          ...item,
+          tmdbInfo: tmdbItem
+        })));
+      }
+    }
+
+    if (localResults.length === 0) {
+      this.bot.sendMessage(chatId, '❌ No se encontraron resultados disponibles.');
       return;
     }
 
     this.userStates.set(chatId, {
-      results: searchResults,
+      results: localResults,
       page: 0,
-      totalPages: Math.ceil(searchResults.length / this.ITEMS_PER_PAGE)
+      totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE),
+      type
     });
 
     this.sendResultsPage(chatId);
@@ -36,8 +56,10 @@ class SearchHandler {
     const currentResults = state.results.slice(start, end);
 
     const keyboard = currentResults.map(result => [{
-      text: `🎬 ${result.item.name.substring(0, 50)}${result.item.name.length > 50 ? '...' : ''} [${result.item.categoryName}]`,
-      callback_data: `select_${result.item.id}`
+      text: `${state.type === 'movie' ? '🎬' : '📺'} ${result.name || result.title}`,
+      callback_data: state.type === 'movie' ? 
+        `select_movie_${result.id}` : 
+        `select_series_${result.id}`
     }]);
 
     const navButtons = [];
@@ -52,7 +74,7 @@ class SearchHandler {
       keyboard.push(navButtons);
     }
 
-    const message = `🔍 Resultados (${start + 1}-${end} de ${state.results.length})\n` +
+    const message = `${state.type === 'movie' ? '🎬 Películas' : '📺 Series'} (${start + 1}-${end} de ${state.results.length})\n` +
                    `📄 Página ${state.page + 1} de ${state.totalPages}`;
 
     this.bot.sendMessage(chatId, message, {

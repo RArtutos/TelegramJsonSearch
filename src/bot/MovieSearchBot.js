@@ -1,52 +1,66 @@
 const TelegramBot = require('node-telegram-bot-api');
 const MovieDataManager = require('../data/MovieDataManager');
-const SearchHandler = require('../handlers/SearchHandler');
+const MovieHandler = require('../handlers/MovieHandler');
+const SeriesHandler = require('../handlers/SeriesHandler');
 const DownloadHandler = require('../handlers/DownloadHandler');
-const CallbackHandler = require('../handlers/CallbackHandler');
 
 class MovieSearchBot {
   constructor() {
     this.bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
       polling: true,
-      baseApiUrl: process.env.LOCAL_API_URL
+      baseApiUrl: process.env.LOCAL_API_URL,
+      apiRoot: process.env.LOCAL_API_URL
     });
 
     this.movieDataManager = new MovieDataManager();
-    this.searchHandler = new SearchHandler(this.bot, this.movieDataManager);
+    this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
+    this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
     this.downloadHandler = new DownloadHandler(this.bot);
-    this.callbackHandler = new CallbackHandler(
-      this.bot,
-      this.movieDataManager,
-      this.searchHandler,
-      this.downloadHandler
-    );
 
     this.initializeBot();
   }
 
   initializeBot() {
-    // Comando /start
     this.bot.onText(/\/start/, (msg) => {
       const chatId = msg.chat.id;
       this.bot.sendMessage(chatId, 
-        '🎬 *Bienvenido al Buscador de Películas*\n\n' +
-        'Usa el comando /search seguido del nombre de la película para buscar.\n' +
-        'Ejemplo: `/search matrix`',
+        '🎬 *Bienvenido al Buscador de Películas y Series*\n\n' +
+        'Usa los siguientes comandos:\n' +
+        '`/movie nombre` - Buscar películas\n' +
+        '`/series nombre` - Buscar series\n\n' +
+        'Ejemplo: `/movie matrix` o `/series breaking bad`',
         { parse_mode: 'Markdown' }
       );
     });
 
-    // Comando /search
-    this.bot.onText(/\/search (.+)/, (msg, match) => {
-      this.searchHandler.handleSearch(msg.chat.id, match[1]);
+    this.bot.onText(/\/movie (.+)/, (msg, match) => {
+      this.movieHandler.handleSearch(msg.chat.id, match[1]);
     });
 
-    // Manejador de callbacks
-    this.bot.on('callback_query', (query) => {
-      this.callbackHandler.handle(query);
+    this.bot.onText(/\/series (.+)/, (msg, match) => {
+      this.seriesHandler.handleSearch(msg.chat.id, match[1]);
     });
 
-    // Manejador de errores
+    this.bot.on('callback_query', async (query) => {
+      try {
+        await this.bot.answerCallbackQuery(query.id);
+        
+        if (query.data.startsWith('movie_') || query.data.startsWith('prev_movie') || query.data.startsWith('next_movie')) {
+          await this.movieHandler.handleCallback(query);
+        } else if (query.data.startsWith('series_') || query.data.startsWith('season_') || 
+                   query.data.startsWith('episode_') || query.data.startsWith('prev_series') || 
+                   query.data.startsWith('next_series')) {
+          await this.seriesHandler.handleCallback(query);
+        } else if (query.data.startsWith('download_')) {
+          const [_, id, itag] = query.data.split('_');
+          await this.downloadHandler.downloadAndSendVideo(query.message.chat.id, id, itag);
+        }
+      } catch (error) {
+        console.error('Error handling callback:', error);
+        this.bot.sendMessage(query.message.chat.id, '❌ Ocurrió un error. Por favor, intenta de nuevo.');
+      }
+    });
+
     this.bot.on('polling_error', (error) => {
       console.error('Polling error:', error);
     });

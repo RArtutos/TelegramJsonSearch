@@ -4,40 +4,45 @@ const MovieHandler = require('../handlers/MovieHandler');
 const SeriesHandler = require('../handlers/SeriesHandler');
 const DownloadHandler = require('../handlers/DownloadHandler');
 const { formatBytes, formatTime } = require('../utils/formatters');
+const fs = require('fs');
 
 class MovieSearchBot {
   constructor() {
+    // Inicializar el bot con el token y configuración
     this.bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
       polling: true,
       baseApiUrl: process.env.LOCAL_API_URL,
       apiRoot: process.env.LOCAL_API_URL
     });
 
+    // Inicializar manejadores
     this.movieDataManager = new MovieDataManager();
     this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
     this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
-    this.downloadHandler = new DownloadHandler(this.bot, this.movieDataManager);
+    this.downloadHandler = new DownloadHandler(this.bot);
     this.adminUsers = process.env.ADMIN_USERS?.split(',') || [];
 
+    console.log('Bot inicializado correctamente');
     this.initializeBot();
   }
 
   initializeBot() {
-    // Comandos básicos
-    this.bot.onText(/\/start/, this.handleStart.bind(this));
-    this.bot.onText(/\/movie (.+)/, this.handleMovieSearch.bind(this));
-    this.bot.onText(/\/series (.+)/, this.handleSeriesSearch.bind(this));
-    this.bot.onText(/\/status/, this.handleStatus.bind(this));
-    this.bot.onText(/\/statusC/, this.handleDetailedStatus.bind(this));
-    this.bot.onText(/\/back/, this.handleBack.bind(this));
-    this.bot.onText(/\/help/, this.handleHelp.bind(this));
+    // Comandos básicos con regex mejorados
+    this.bot.onText(/^\/start$/, this.handleStart.bind(this));
+    this.bot.onText(/^\/movie(?:\s+(.+))?$/, this.handleMovieSearch.bind(this));
+    this.bot.onText(/^\/series(?:\s+(.+))?$/, this.handleSeriesSearch.bind(this));
+    this.bot.onText(/^\/status$/, this.handleStatus.bind(this));
+    this.bot.onText(/^\/statusC$/, this.handleDetailedStatus.bind(this));
+    this.bot.onText(/^\/back$/, this.handleBack.bind(this));
+    this.bot.onText(/^\/help$/, this.handleHelp.bind(this));
+    this.bot.onText(/^\/listAll\s+(movies|series)$/, this.handleListAll.bind(this));
 
     // Manejo de callbacks
     this.bot.on('callback_query', this.handleCallback.bind(this));
     
     // Manejo de errores
     this.bot.on('polling_error', (error) => {
-      console.error('Polling error:', error);
+      console.error('Error de polling:', error);
     });
   }
 
@@ -58,12 +63,87 @@ class MovieSearchBot {
 
   async handleMovieSearch(msg, match) {
     const chatId = msg.chat.id;
-    await this.movieHandler.handleSearch(chatId, match[1]);
+    const searchQuery = match[1]?.trim();
+
+    if (!searchQuery) {
+      await this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda.\nEjemplo: `/movie matrix`', {
+        parse_mode: 'Markdown'
+      });
+      return;
+    }
+
+    console.log(`Búsqueda de película iniciada: "${searchQuery}"`);
+    await this.movieHandler.handleSearch(chatId, searchQuery);
   }
 
   async handleSeriesSearch(msg, match) {
     const chatId = msg.chat.id;
-    await this.seriesHandler.handleSearch(chatId, match[1]);
+    const searchQuery = match[1]?.trim();
+
+    if (!searchQuery) {
+      await this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda.\nEjemplo: `/series friends`', {
+        parse_mode: 'Markdown'
+      });
+      return;
+    }
+
+    console.log(`Búsqueda de serie iniciada: "${searchQuery}"`);
+    await this.seriesHandler.handleSearch(chatId, searchQuery);
+  }
+
+  async handleListAll(msg, match) {
+    const chatId = msg.chat.id;
+    
+    // Verificar si es administrador
+    if (!this.adminUsers.includes(chatId.toString())) {
+      await this.bot.sendMessage(chatId, '⚠️ Este comando es solo para administradores.');
+      return;
+    }
+
+    const type = match[1]; // 'movies' o 'series'
+    const data = type === 'movies' ? this.movieDataManager.movieData : this.movieDataManager.seriesData;
+    
+    if (data.length === 0) {
+      await this.bot.sendMessage(chatId, `❌ No hay ${type === 'movies' ? 'películas' : 'series'} disponibles.`);
+      return;
+    }
+
+    // Crear contenido del archivo
+    let content = `Lista completa de ${type === 'movies' ? 'películas' : 'series'}\n`;
+    content += `Total: ${data.length}\n`;
+    content += '=====================================\n\n';
+
+    data.forEach((item, index) => {
+      content += `${index + 1}. ${item.title || item.name}\n`;
+      content += `   ID: ${item.id}\n`;
+      if (item.path) content += `   Ruta: ${item.path}\n`;
+      if (type === 'series' && item.seasons) {
+        content += `   Temporadas: ${item.seasons.length}\n`;
+        item.seasons.forEach(season => {
+          content += `      - ${season.name}: ${season.episodes.length} episodios\n`;
+        });
+      }
+      content += '\n';
+    });
+
+    // Crear archivo temporal
+    const fileName = `lista_${type}_${Date.now()}.txt`;
+    const filePath = `./${fileName}`;
+    
+    try {
+      fs.writeFileSync(filePath, content, 'utf8');
+      
+      // Enviar archivo
+      await this.bot.sendDocument(chatId, filePath, {
+        caption: `📋 Lista completa de ${type === 'movies' ? 'películas' : 'series'}`
+      });
+
+      // Eliminar archivo temporal
+      fs.unlinkSync(filePath);
+    } catch (error) {
+      console.error('Error al crear/enviar archivo:', error);
+      await this.bot.sendMessage(chatId, '❌ Error al generar la lista.');
+    }
   }
 
   async handleStatus(msg) {
@@ -129,16 +209,24 @@ class MovieSearchBot {
 
   async handleHelp(msg) {
     const chatId = msg.chat.id;
-    await this.bot.sendMessage(chatId,
-      '📖 *Ayuda del Bot*\n\n' +
+    const isAdmin = this.adminUsers.includes(chatId.toString());
+    
+    let helpMessage = '📖 *Ayuda del Bot*\n\n' +
       '*Comandos Básicos:*\n' +
       '`/movie nombre` - Buscar películas\n' +
       '`/series nombre` - Buscar series\n' +
       '`/status` - Ver estado básico\n' +
-      '`/statusC` - Ver estado detallado (admin)\n' +
       '`/back` - Volver al menú anterior\n' +
-      '`/help` - Mostrar esta ayuda\n\n' +
-      '*Navegación:*\n' +
+      '`/help` - Mostrar esta ayuda\n\n';
+
+    if (isAdmin) {
+      helpMessage += '*Comandos de Administrador:*\n' +
+        '`/statusC` - Ver estado detallado\n' +
+        '`/listAll movies` - Listar todas las películas\n' +
+        '`/listAll series` - Listar todas las series\n\n';
+    }
+
+    helpMessage += '*Navegación:*\n' +
       '- Usa los botones para navegar\n' +
       '- `/back` para volver atrás\n' +
       '- Selecciona calidad al descargar\n\n' +
@@ -149,9 +237,9 @@ class MovieSearchBot {
       '*Calidades Disponibles:*\n' +
       '- 1080p HD\n' +
       '- 720p HD\n' +
-      '- 360p SD',
-      { parse_mode: 'Markdown' }
-    );
+      '- 360p SD';
+
+    await this.bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
   }
 
   async handleCallback(query) {
@@ -174,7 +262,7 @@ class MovieSearchBot {
         await this.handleNavigation(query.message.chat.id, 'back');
       }
     } catch (error) {
-      console.error('Error handling callback:', error);
+      console.error('Error en callback:', error);
       this.bot.sendMessage(query.message.chat.id, 
         '❌ Ocurrió un error. Por favor, intenta de nuevo.');
     }

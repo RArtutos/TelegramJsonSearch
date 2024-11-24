@@ -1,0 +1,25 @@
+{
+  "series": [
+    {
+      "id": "example-series-1",
+      "title": "Example Series 1",
+      "type": "directory",
+      "children": [
+        {
+          "id": "season-1",
+          "name": "Season 1",
+          "type": "directory",
+          "children": [
+            {
+              "id": "episode-1",
+              "name": "Episode 1",
+              "type": "file",
+              "mimeType": "video/mp4",
+              "path": "/series/example1/s01e01.mp4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

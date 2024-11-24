@@ -1,0 +1,11 @@
+{
+  "movies": [
+    {
+      "id": "example-movie-1",
+      "title": "Example Movie 1",
+      "type": "file",
+      "mimeType": "video/mp4",
+      "path": "/movies/example1.mp4"
+    }
+  ]
+}

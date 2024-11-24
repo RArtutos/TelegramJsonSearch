@@ -1,5 +1,4 @@
 const fs = require('fs');
-const axios = require('axios');
 const Fuse = require('fuse.js');
 
 class MovieDataManager {
@@ -16,154 +15,181 @@ class MovieDataManager {
 
   loadData() {
     try {
+      console.log('Iniciando carga de datos...');
+      
+      // Verificar y cargar películas
+      if (!fs.existsSync('./data/pelis.json')) {
+        throw new Error('Archivo pelis.json no encontrado en ./data/');
+      }
       const rawMovieData = JSON.parse(fs.readFileSync('./data/pelis.json', 'utf8'));
+      
+      // Verificar y cargar series
+      if (!fs.existsSync('./data/series.json')) {
+        throw new Error('Archivo series.json no encontrado en ./data/');
+      }
       const rawSeriesData = JSON.parse(fs.readFileSync('./data/series.json', 'utf8'));
       
-      // Aplanar y normalizar datos de películas
-      this.movieData = this._flattenAndNormalizeData(rawMovieData, 'movie');
-      this.seriesData = this._flattenAndNormalizeData(rawSeriesData, 'series');
+      // Procesar datos
+      this.processData(rawMovieData, rawSeriesData);
       
-      // Crear índices de búsqueda
-      this._createSearchIndices();
-      
-      console.log(`Data loaded successfully: ${this.movieData.length} movies, ${this.seriesData.length} series`);
+      console.log(`Datos cargados: ${this.movieData.length} películas, ${this.seriesData.length} series`);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error crítico al cargar datos:', error);
       process.exit(1);
     }
   }
 
-  _flattenAndNormalizeData(data, type) {
-    const flattened = [];
-    
-    const processItem = (item, parentInfo = {}) => {
-      const normalizedItem = {
-        id: item.id,
-        type: item.type || type,
-        name: item.name || item.title,
-        title: item.title || item.name,
-        path: item.path || '',
-        mimeType: item.mimeType || '',
-        parent: parentInfo,
-        ...item
-      };
-
-      if (item.type === 'file' && item.mimeType?.includes('video')) {
-        flattened.push(normalizedItem);
-      }
-
-      if (item.children) {
-        item.children.forEach(child => 
-          processItem(child, {
-            id: normalizedItem.id,
-            name: normalizedItem.name,
-            type: normalizedItem.type
-          })
-        );
-      }
+  processData(movieData, seriesData) {
+    // Procesar películas
+    const processMovies = (items, parentPath = '') => {
+      items.forEach(item => {
+        if (item.type === 'file' && item.mimeType?.includes('video')) {
+          this.movieData.push({
+            id: item.id,
+            title: item.title || '',
+            name: item.name || '',
+            path: parentPath + '/' + (item.path || ''),
+            type: 'movie'
+          });
+        } else if (item.children && Array.isArray(item.children)) {
+          const newPath = parentPath + '/' + (item.path || '');
+          processMovies(item.children, newPath);
+        }
+      });
     };
 
-    data.forEach(item => processItem(item));
-    return flattened;
+    // Procesar series
+    const processSeries = (items, parentPath = '') => {
+      items.forEach(item => {
+        if (item.type === 'directory') {
+          const series = {
+            id: item.id,
+            title: item.title || '',
+            name: item.name || '',
+            path: parentPath + '/' + (item.path || ''),
+            type: 'series',
+            seasons: []
+          };
+
+          if (item.children && Array.isArray(item.children)) {
+            item.children.forEach(season => {
+              if (season.type === 'directory') {
+                const seasonObj = {
+                  id: season.id,
+                  name: season.name || '',
+                  episodes: []
+                };
+
+                if (season.children && Array.isArray(season.children)) {
+                  season.children.forEach(episode => {
+                    if (episode.type === 'file' && episode.mimeType?.includes('video')) {
+                      seasonObj.episodes.push({
+                        id: episode.id,
+                        name: episode.name || '',
+                        path: parentPath + '/' + season.path + '/' + (episode.path || ''),
+                        type: 'episode'
+                      });
+                    }
+                  });
+                }
+
+                if (seasonObj.episodes.length > 0) {
+                  series.seasons.push(seasonObj);
+                }
+              }
+            });
+          }
+
+          if (series.seasons.length > 0) {
+            this.seriesData.push(series);
+          }
+        }
+      });
+    };
+
+    // Procesar los datos
+    if (Array.isArray(movieData)) {
+      processMovies(movieData);
+    } else if (movieData.movies && Array.isArray(movieData.movies)) {
+      processMovies(movieData.movies);
+    }
+
+    if (Array.isArray(seriesData)) {
+      processSeries(seriesData);
+    } else if (seriesData.series && Array.isArray(seriesData.series)) {
+      processSeries(seriesData.series);
+    }
+
+    // Crear índices de búsqueda
+    this._createSearchIndices();
   }
 
   _createSearchIndices() {
     const fuseOptions = {
-      keys: ['name', 'title'],
-      threshold: 0.3,
-      includeScore: true
+      keys: ['title', 'name'],
+      threshold: 0.4,
+      includeScore: true,
+      useExtendedSearch: true
     };
 
     this.searchIndex.movies = new Fuse(this.movieData, fuseOptions);
     this.searchIndex.series = new Fuse(this.seriesData, fuseOptions);
   }
 
-  async searchContent(query, type = 'movie') {
-    // Primero buscar en TMDB
-    const tmdbResults = await this.searchTMDB(query, type);
+  searchContent(query, type = 'movie') {
+    console.log(`Buscando ${type}: "${query}"`);
     
-    // Luego buscar en datos locales
-    const localResults = this.searchIndex[type === 'movie' ? 'movies' : 'series']
-      .search(query)
-      .filter(result => result.score < 0.3) // Solo resultados con buena coincidencia
-      .map(result => result.item);
-
-    // Combinar y deduplicar resultados
-    return this._mergeResults(tmdbResults, localResults, type);
-  }
-
-  async searchTMDB(query, type = 'movie') {
-    try {
-      const response = await axios.get(`https://api.themoviedb.org/3/search/${type}`, {
-        params: {
-          api_key: process.env.TMDB_API_KEY,
-          query,
-          language: 'es-MX'
-        }
-      });
-      return response.data.results;
-    } catch (error) {
-      console.error('TMDB API error:', error);
-      return [];
-    }
-  }
-
-  _mergeResults(tmdbResults, localResults, type) {
-    const merged = new Map();
-
-    // Agregar resultados locales
-    localResults.forEach(item => {
-      merged.set(item.id, {
-        ...item,
-        source: 'local'
-      });
-    });
-
-    // Agregar y combinar con resultados de TMDB
-    tmdbResults.forEach(tmdbItem => {
-      const localMatch = localResults.find(local => 
-        local.title?.toLowerCase() === tmdbItem.title?.toLowerCase() ||
-        local.name?.toLowerCase() === tmdbItem.name?.toLowerCase()
-      );
-
-      if (localMatch) {
-        merged.set(localMatch.id, {
-          ...localMatch,
-          tmdbInfo: tmdbItem,
-          source: 'both'
+    const searchData = type === 'movie' ? this.movieData : this.seriesData;
+    const results = [];
+    
+    // Búsqueda directa (coincidencia exacta o contiene)
+    searchData.forEach(item => {
+      const title = (item.title || '').toLowerCase();
+      const name = (item.name || '').toLowerCase();
+      const searchTerm = query.toLowerCase();
+      
+      if (title.includes(searchTerm) || name.includes(searchTerm)) {
+        results.push({
+          ...item,
+          score: title === searchTerm || name === searchTerm ? 0 : 0.1
         });
       }
     });
 
-    return Array.from(merged.values());
+    // Si no hay resultados exactos, usar búsqueda fuzzy
+    if (results.length === 0) {
+      const fuzzyResults = this.searchIndex[type === 'movie' ? 'movies' : 'series']
+        .search(query)
+        .filter(result => result.score < 0.4)
+        .map(result => ({
+          ...result.item,
+          score: result.score
+        }));
+      
+      results.push(...fuzzyResults);
+    }
+
+    // Ordenar por relevancia
+    results.sort((a, b) => a.score - b.score);
+
+    console.log(`Resultados encontrados: ${results.length}`);
+    return results;
   }
 
   getSeasons(seriesId) {
-    return this.seriesData
-      .filter(item => 
-        item.parent?.id === seriesId && 
-        item.type === 'directory' &&
-        item.name.toLowerCase().includes('season')
-      )
-      .sort((a, b) => {
-        const numA = parseInt(a.name.match(/\d+/)?.[0] || 0);
-        const numB = parseInt(b.name.match(/\d+/)?.[0] || 0);
-        return numA - numB;
-      });
+    const series = this.seriesData.find(s => s.id === seriesId);
+    return series?.seasons || [];
   }
 
   getEpisodes(seasonId) {
-    return this.seriesData
-      .filter(item => 
-        item.parent?.id === seasonId && 
-        item.type === 'file' &&
-        item.mimeType?.includes('video')
-      )
-      .sort((a, b) => {
-        const numA = parseInt(a.name.match(/\d+/)?.[0] || 0);
-        const numB = parseInt(b.name.match(/\d+/)?.[0] || 0);
-        return numA - numB;
-      });
+    for (const series of this.seriesData) {
+      for (const season of series.seasons) {
+        if (season.id === seasonId) {
+          return season.episodes;
+        }
+      }
+    }
+    return [];
   }
 
   getItemById(id, type = 'any') {
@@ -180,7 +206,6 @@ class MovieDataManager {
     return null;
   }
 
-  // Métodos para gestión de descargas activas
   addActiveDownload(userId, downloadInfo) {
     this.activeDownloads.set(userId, downloadInfo);
   }

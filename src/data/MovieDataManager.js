@@ -14,17 +14,16 @@ class MovieDataManager {
 
   loadData() {
     try {
+      console.log('Loading data from JSON files...');
       const moviesPath = './data/pelis.json';
       const seriesPath = './data/series.json';
 
       if (fs.existsSync(moviesPath)) {
-        const movieData = JSON.parse(fs.readFileSync(moviesPath, 'utf8'));
-        this.movies = movieData.movies || [];
+        this.movies = JSON.parse(fs.readFileSync(moviesPath, 'utf8')) || [];
       }
 
       if (fs.existsSync(seriesPath)) {
-        const seriesData = JSON.parse(fs.readFileSync(seriesPath, 'utf8'));
-        this.series = seriesData.series || [];
+        this.series = JSON.parse(fs.readFileSync(seriesPath, 'utf8')) || [];
       }
 
       this.initializeSearchIndices();
@@ -50,34 +49,24 @@ class MovieDataManager {
     const index = this.searchIndices[type];
     if (!index) return [];
 
-    return index.search(query).map(result => ({
-      ...result.item,
-      score: result.score
-    }));
+    return index.search(query).map(result => result.item);
   }
 
   getItem(id, type) {
-    if (type === 'movie') {
-      return this.movies.find(m => m.id === id);
-    }
-    return this.series.find(s => s.id === id);
+    const collection = type === 'movies' ? this.movies : this.series;
+    return collection.find(item => item.id === id);
   }
 
   getSeasons(seriesId) {
     const series = this.series.find(s => s.id === seriesId);
-    return series?.children || [];
+    return series?.seasons || [];
   }
 
-  getEpisodes(seasonId) {
-    for (const series of this.series) {
-      for (const season of (series.children || [])) {
-        if (season.id === seasonId) {
-          return season.children || [];
-        }
-      }
-    }
-    return [];
+  getEpisodes(seasonId, seriesId) {
+    const series = this.series.find(s => s.id === seriesId);
+    if (!series) return [];
+    
+    const season = series.seasons?.find(s => s.id === seasonId);
+    return season?.episodes || [];
   }
 }
-
-module.exports = MovieDataManager;

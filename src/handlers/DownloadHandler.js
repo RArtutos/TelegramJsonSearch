@@ -1,5 +1,3 @@
-const { formatBytes, formatTime } = require('../utils/formatters');
-
 class DownloadHandler {
   constructor(bot, dataManager) {
     this.bot = bot;
@@ -10,7 +8,7 @@ class DownloadHandler {
     const statusMessage = await this.bot.sendMessage(chatId, '🔄 Preparando descarga...');
 
     try {
-      const item = this.dataManager.getItem(id, 'movie');
+      const item = this.dataManager.getItem(id, 'movies');
       if (!item) {
         throw new Error('Contenido no encontrado');
       }
@@ -58,5 +56,3 @@ class DownloadHandler {
     return `📥 Descargando: ${fileName}\n\n${bar} ${progress}%`;
   }
 }
-
-module.exports = DownloadHandler;

@@ -14,7 +14,7 @@ class SearchHandler {
 
     const results = this.dataManager.search(query, type);
     if (results.length === 0) {
-      await this.bot.sendMessage(chatId, `❌ No se encontraron ${type === 'movie' ? 'películas' : 'series'}.`);
+      await this.bot.sendMessage(chatId, `❌ No se encontraron ${type === 'movies' ? 'películas' : 'series'}.`);
       return;
     }
 
@@ -37,8 +37,8 @@ class SearchHandler {
     const items = state.results.slice(start, end);
 
     const keyboard = items.map(item => [{
-      text: `${state.type === 'movie' ? '🎬' : '📺'} ${item.name}`,
-      callback_data: `${state.type}_${item.id}`
+      text: `${state.type === 'movies' ? '🎬' : '📺'} ${item.name}`,
+      callback_data: `${state.type === 'movies' ? 'movie' : 'series'}_${item.id}`
     }]);
 
     if (state.totalPages > 1) {
@@ -54,7 +54,7 @@ class SearchHandler {
       }
     }
 
-    const message = `${state.type === 'movie' ? '🎬 Películas' : '📺 Series'} ` +
+    const message = `${state.type === 'movies' ? '🎬 Películas' : '📺 Series'} ` +
                    `(${start + 1}-${end} de ${state.results.length})`;
 
     await this.bot.sendMessage(chatId, message, {
@@ -77,7 +77,7 @@ class SearchHandler {
     }
 
     const [type, id] = data.split('_');
-    const item = this.dataManager.getItem(id, type);
+    const item = this.dataManager.getItem(id, type === 'movie' ? 'movies' : 'series');
     
     if (!item) {
       await this.bot.sendMessage(chatId, '❌ Contenido no encontrado.');
@@ -98,30 +98,30 @@ class SearchHandler {
       { label: '📱 360p SD', quality: '360' }
     ];
 
-    const keyboard = qualities.map(q => ({
+    const keyboard = qualities.map(q => [{
       text: q.label,
       callback_data: `download_${movie.id}_${q.quality}`
-    }));
+    }]);
 
     await this.bot.sendMessage(chatId,
       `🎬 *${movie.name}*\n\nSelecciona la calidad:`,
       {
         parse_mode: 'Markdown',
-        reply_markup: { inline_keyboard: [keyboard] }
+        reply_markup: { inline_keyboard: keyboard }
       }
     );
   }
 
   async showSeasons(chatId, series) {
     const seasons = this.dataManager.getSeasons(series.id);
-    if (!seasons.length) {
+    if (!seasons || seasons.length === 0) {
       await this.bot.sendMessage(chatId, '❌ No hay temporadas disponibles.');
       return;
     }
 
     const keyboard = seasons.map(season => [{
       text: `📺 ${season.name}`,
-      callback_data: `season_${season.id}`
+      callback_data: `season_${season.id}_${series.id}`
     }]);
 
     await this.bot.sendMessage(chatId,
@@ -132,6 +132,24 @@ class SearchHandler {
       }
     );
   }
-}
 
-module.exports = SearchHandler;
+  async showEpisodes(chatId, seasonId, seriesId) {
+    const episodes = this.dataManager.getEpisodes(seasonId, seriesId);
+    if (!episodes || episodes.length === 0) {
+      await this.bot.sendMessage(chatId, '❌ No hay episodios disponibles.');
+      return;
+    }
+
+    const keyboard = episodes.map(episode => [{
+      text: `📺 ${episode.name}`,
+      callback_data: `episode_${episode.id}`
+    }]);
+
+    await this.bot.sendMessage(chatId,
+      'Selecciona un episodio:',
+      {
+        reply_markup: { inline_keyboard: keyboard }
+      }
+    );
+  }
+}

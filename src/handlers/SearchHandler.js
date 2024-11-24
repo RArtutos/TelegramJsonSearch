@@ -86,12 +86,17 @@ class SearchHandler {
 
     if (type === 'movie') {
       await this.showQualityOptions(chatId, item);
-    } else {
+    } else if (type === 'series') {
       await this.showSeasons(chatId, item);
+    } else if (type === 'season') {
+      const [_, seasonId, seriesId] = data.split('_');
+      await this.showEpisodes(chatId, seasonId);
+    } else if (type === 'episode') {
+      await this.showQualityOptions(chatId, item);
     }
   }
 
-  async showQualityOptions(chatId, movie) {
+  async showQualityOptions(chatId, item) {
     const qualities = [
       { label: '🎬 1080p HD', quality: '1080' },
       { label: '🎥 720p HD', quality: '720' },
@@ -100,11 +105,11 @@ class SearchHandler {
 
     const keyboard = qualities.map(q => [{
       text: q.label,
-      callback_data: `download_${movie.id}_${q.quality}`
+      callback_data: `download_${item.id}_${q.quality}`
     }]);
 
     await this.bot.sendMessage(chatId,
-      `🎬 *${movie.name}*\n\nSelecciona la calidad:`,
+      `🎬 *${item.name}*\n\nSelecciona la calidad:`,
       {
         parse_mode: 'Markdown',
         reply_markup: { inline_keyboard: keyboard }
@@ -133,8 +138,8 @@ class SearchHandler {
     );
   }
 
-  async showEpisodes(chatId, seasonId, seriesId) {
-    const episodes = this.dataManager.getEpisodes(seasonId, seriesId);
+  async showEpisodes(chatId, seasonId) {
+    const episodes = this.dataManager.getEpisodes(seasonId);
     if (!episodes || episodes.length === 0) {
       await this.bot.sendMessage(chatId, '❌ No hay episodios disponibles.');
       return;
@@ -153,3 +158,5 @@ class SearchHandler {
     );
   }
 }
+
+module.exports = SearchHandler;

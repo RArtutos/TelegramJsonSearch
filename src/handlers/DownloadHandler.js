@@ -56,3 +56,5 @@ class DownloadHandler {
     return `📥 Descargando: ${fileName}\n\n${bar} ${progress}%`;
   }
 }
+
+module.exports = DownloadHandler;

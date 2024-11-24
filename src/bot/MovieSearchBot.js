@@ -15,7 +15,7 @@ class MovieSearchBot {
     this.movieDataManager = new MovieDataManager();
     this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
     this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
-    this.downloadHandler = new DownloadHandler(this.bot);
+    this.downloadHandler = new DownloadHandler(this.bot, this.movieDataManager);
     this.adminUsers = process.env.ADMIN_USERS?.split(',') || [];
 
     this.initializeBot();

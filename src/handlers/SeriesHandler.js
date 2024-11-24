@@ -46,11 +46,11 @@ class SeriesHandler {
 
     const keyboard = currentResults.map(result => {
       const icon = result.hasLocal ? '📺' : '🔍';
-      const title = result.title || result.name;
+      const name = result.name;
       const status = result.hasLocal ? ' (Disponible)' : ' (Info)';
       return [{
-        text: `${icon} ${title}${status}`,
-        callback_data: `series_${result.id || result.tmdbId}`
+        text: `${icon} ${name}${status}`,
+        callback_data: `series_${result.id}`
       }];
     });
 
@@ -115,50 +115,39 @@ class SeriesHandler {
   async handleSeriesSelection(chatId, data) {
     const seriesId = data.split('_')[1];
     const state = this.userStates.get(chatId);
-    const series = state?.results.find(s => (s.id || s.tmdbId) === seriesId);
+    const series = state?.results.find(s => s.id === seriesId);
     
     if (!series) {
       await this.bot.sendMessage(chatId, '❌ Serie no encontrada.');
       return;
     }
 
-    if (series.hasLocal) {
-      const seasons = this.movieDataManager.getSeasons(series.id);
-      if (seasons.length === 0) {
-        await this.bot.sendMessage(chatId, '❌ No hay temporadas disponibles.');
-        return;
-      }
-
-      const keyboard = seasons.map(season => [{
-        text: `📺 ${season.name}`,
-        callback_data: `season_${season.id}`
-      }]);
-
-      const message = `📺 *${series.title || series.name}*\n` +
-                     `${series.tmdbInfo?.overview ? `📝 ${series.tmdbInfo.overview}\n\n` : ''}` +
-                     `Selecciona una temporada:`;
-
-      await this.bot.sendMessage(chatId, message, {
-        reply_markup: { inline_keyboard: keyboard },
-        parse_mode: 'Markdown'
-      });
-    } else {
-      const message = `📺 *${series.title}*\n` +
-                     `${series.overview ? `📝 ${series.overview}\n\n` : ''}` +
-                     `⚠️ Esta serie no está disponible actualmente.`;
-      
-      await this.bot.sendMessage(chatId, message, {
-        parse_mode: 'Markdown'
-      });
+    const seasons = this.movieDataManager.getSeasons(series.id);
+    if (!seasons || seasons.length === 0) {
+      await this.bot.sendMessage(chatId, '❌ No hay temporadas disponibles para esta serie.');
+      return;
     }
+
+    const keyboard = seasons.map(season => [{
+      text: `📺 ${season.name}`,
+      callback_data: `season_${season.id}`
+    }]);
+
+    const message = `📺 *${series.name}*\n` +
+                   `Selecciona una temporada:`;
+
+    await this.bot.sendMessage(chatId, message, {
+      reply_markup: { inline_keyboard: keyboard },
+      parse_mode: 'Markdown'
+    });
   }
 
   async handleSeasonSelection(chatId, data) {
     const seasonId = data.split('_')[1];
     const episodes = this.movieDataManager.getEpisodes(seasonId);
     
-    if (episodes.length === 0) {
-      await this.bot.sendMessage(chatId, '❌ No hay episodios disponibles.');
+    if (!episodes || episodes.length === 0) {
+      await this.bot.sendMessage(chatId, '❌ No hay episodios disponibles para esta temporada.');
       return;
     }
 

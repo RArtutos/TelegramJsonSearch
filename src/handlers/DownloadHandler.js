@@ -2,8 +2,9 @@ const ChunkDownloader = require('../utils/ChunkDownloader');
 const { formatBytes, formatTime, createProgressBar } = require('../utils/formatters');
 
 class DownloadHandler {
-  constructor(bot) {
+  constructor(bot, movieDataManager) {
     this.bot = bot;
+    this.movieDataManager = movieDataManager;
     this.CHUNK_SIZE = 10 * 1024 * 1024;
     this.MAX_PARALLEL_DOWNLOADS = 8;
     this.UPDATE_INTERVAL = 1000;
@@ -15,6 +16,12 @@ class DownloadHandler {
     let updateInterval;
 
     try {
+      // Obtener el nombre del archivo desde el movieDataManager
+      const item = this.movieDataManager.getItemById(id);
+      if (!item) {
+        throw new Error('Contenido no encontrado');
+      }
+
       const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${id}?a=0&id=${id}&itag=${itag}`;
       
       const state = {
@@ -22,7 +29,8 @@ class DownloadHandler {
         downloadedBytes: 0,
         totalSize: 0,
         activeChunks: 0,
-        phase: 'download'
+        phase: 'download',
+        fileName: item.name // Usar el nombre del archivo
       };
 
       const downloader = new ChunkDownloader(downloadUrl, this.CHUNK_SIZE, this.MAX_PARALLEL_DOWNLOADS);
@@ -56,7 +64,7 @@ class DownloadHandler {
       });
 
       await this.bot.sendVideo(chatId, uploadStream, {
-        caption: `🎬 ${id}`,
+        caption: `🎬 ${state.fileName}`,
         supports_streaming: true,
         duration: 0,
         width: itag === '37' ? 1920 : (itag === '22' ? 1280 : 640),
@@ -97,7 +105,7 @@ class DownloadHandler {
       const timeText = `⏱ ${formatTime(remaining)} restantes`;
       const elapsedText = `⏳ ${formatTime(elapsed)} transcurridos`;
 
-      let message = `${state.phase === 'download' ? '📥 Descargando' : '📤 Subiendo'}...\n\n` +
+      let message = `${state.phase === 'download' ? '📥 Descargando' : '📤 Subiendo'} ${state.fileName}...\n\n` +
                    `${progressBar} ${progress.toFixed(1)}%\n\n` +
                    `⚡ Velocidad: ${speedText}\n` +
                    `📦 Progreso: ${downloadedText}\n` +

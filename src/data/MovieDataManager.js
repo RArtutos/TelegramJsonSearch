@@ -21,6 +21,7 @@ class MovieDataManager {
 
   async searchTMDB(query, type = 'movie') {
     try {
+      console.log(`🔍 Buscando en TMDB: "${query}" (tipo: ${type})`);
       const response = await axios.get(`https://api.themoviedb.org/3/search/${type}`, {
         params: {
           api_key: process.env.TMDB_API_KEY,
@@ -28,14 +29,16 @@ class MovieDataManager {
           language: 'es-MX'
         }
       });
+      console.log(`✅ TMDB encontró ${response.data.results.length} resultados`);
       return response.data.results;
     } catch (error) {
-      console.error('TMDB API error:', error);
+      console.error('❌ Error en TMDB API:', error);
       return [];
     }
   }
 
   findInLocalData(tmdbTitle, type = 'movie') {
+    console.log(`🔍 Buscando localmente: "${tmdbTitle}" (tipo: ${type})`);
     const data = type === 'movie' ? this.movieData : this.seriesData;
     const items = [];
     
@@ -45,14 +48,18 @@ class MovieDataManager {
           if (type === 'movie') {
             if (item.title?.toLowerCase() === tmdbTitle.toLowerCase() || 
                 item.name?.toLowerCase() === tmdbTitle.toLowerCase()) {
+              console.log(`✅ Encontrada película: ${item.name || item.title}`);
               items.push(item);
             }
           } else {
             if (item.title?.toLowerCase() === tmdbTitle.toLowerCase() || 
                 item.name?.toLowerCase() === tmdbTitle.toLowerCase()) {
+              console.log(`✅ Encontrada serie: ${item.name || item.title}`);
+              const seasons = this.getSeasons(item.id);
+              console.log(`📺 La serie tiene ${seasons.length} temporadas`);
               items.push({
                 ...item,
-                seasons: this.getSeasons(item.id)
+                seasons
               });
             }
           }
@@ -60,9 +67,96 @@ class MovieDataManager {
       }
     }
     
+    console.log(`✅ Total de resultados locales encontrados: ${items.length}`);
     return items;
   }
 
+  getSeasons(seriesId) {
+    console.log(`🔍 Buscando temporadas para serie ID: ${seriesId}`);
+    const series = this.findSeriesById(seriesId);
+    if (!series) {
+      console.log('❌ No se encontró la serie');
+      return [];
+    }
+    if (!series.children) {
+      console.log('❌ La serie no tiene children definido');
+      return [];
+    }
+    
+    const seasons = series.children.filter(child => 
+      child.type === 'directory' && 
+      (child.name.toLowerCase().includes('season') || 
+       child.name.toLowerCase().includes('temporada'))
+    );
+
+    console.log(`✅ Temporadas encontradas: ${seasons.length}`);
+    seasons.forEach(season => {
+      console.log(`📺 Temporada: ${season.name} (ID: ${season.id})`);
+    });
+    
+    return seasons;
+  }
+
+  getEpisodes(seasonId) {
+    console.log(`🔍 Buscando episodios para temporada ID: ${seasonId}`);
+    for (const category of this.seriesData) {
+      for (const series of category.children || []) {
+        for (const season of series.children || []) {
+          if (season.id === seasonId) {
+            console.log(`✅ Temporada encontrada: ${season.name}`);
+            if (!season.children) {
+              console.log('❌ La temporada no tiene children definido');
+              return [];
+            }
+            const episodes = season.children.filter(child => 
+              child.type === 'file' && 
+              child.mimeType?.includes('video')
+            );
+            console.log(`✅ Episodios encontrados: ${episodes.length}`);
+            episodes.forEach(episode => {
+              console.log(`🎬 Episodio: ${episode.name} (ID: ${episode.id})`);
+            });
+            return episodes;
+          }
+        }
+      }
+    }
+    console.log('❌ No se encontró la temporada');
+    return [];
+  }
+
+  findSeriesById(id) {
+    console.log(`🔍 Buscando serie por ID: ${id}`);
+    for (const category of this.seriesData) {
+      if (category.children) {
+        const series = category.children.find(s => s.id === id);
+        if (series) {
+          console.log(`✅ Serie encontrada: ${series.name || series.title}`);
+          return series;
+        }
+      }
+    }
+    console.log('❌ No se encontró la serie');
+    return null;
+  }
+
+  findSeasonById(id) {
+    console.log(`🔍 Buscando temporada por ID: ${id}`);
+    for (const category of this.seriesData) {
+      for (const series of category.children || []) {
+        for (const season of series.children || []) {
+          if (season.id === id) {
+            console.log(`✅ Temporada encontrada: ${season.name}`);
+            return season;
+          }
+        }
+      }
+    }
+    console.log('❌ No se encontró la temporada');
+    return null;
+  }
+
+  // Rest of the methods remain unchanged...
   getAllMovies() {
     const movies = [];
     for (const category of this.movieData) {
@@ -160,54 +254,6 @@ class MovieDataManager {
       totalSeries,
       totalSize
     };
-  }
-
-  getSeasons(seriesId) {
-    const series = this.findSeriesById(seriesId);
-    if (!series || !series.children) return [];
-    
-    return series.children.filter(child => 
-      child.type === 'directory' && 
-      (child.name.toLowerCase().includes('season') || 
-       child.name.toLowerCase().includes('temporada'))
-    );
-  }
-
-  getEpisodes(seasonId) {
-    for (const category of this.seriesData) {
-      for (const series of category.children || []) {
-        for (const season of series.children || []) {
-          if (season.id === seasonId && season.children) {
-            return season.children.filter(child => 
-              child.type === 'file' && 
-              child.mimeType?.includes('video')
-            );
-          }
-        }
-      }
-    }
-    return [];
-  }
-
-  findSeriesById(id) {
-    for (const category of this.seriesData) {
-      if (category.children) {
-        const series = category.children.find(s => s.id === id);
-        if (series) return series;
-      }
-    }
-    return null;
-  }
-
-  findSeasonById(id) {
-    for (const category of this.seriesData) {
-      for (const series of category.children || []) {
-        for (const season of series.children || []) {
-          if (season.id === id) return season;
-        }
-      }
-    }
-    return null;
   }
 
   getEpisodeById(episodeId) {

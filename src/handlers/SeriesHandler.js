@@ -112,7 +112,7 @@ class SeriesHandler {
         currentResults.forEach(result => {
           keyboard.push([{
             text: `📺 ${result.name || result.title}`,
-            callback_data: `series_${result.id}`
+            callback_data: `series:${result.id}`
           }]);
         });
 
@@ -139,7 +139,7 @@ class SeriesHandler {
         seasons.forEach(season => {
           keyboard.push([{
             text: `📺 ${season.name}`,
-            callback_data: `season_${season.id}`
+            callback_data: `season:${season.id}`
           }]);
         });
         message = state.breadcrumb.join(' > ');
@@ -151,7 +151,7 @@ class SeriesHandler {
         episodes.forEach(episode => {
           keyboard.push([{
             text: `🎬 ${episode.name}`,
-            callback_data: `episode_${episode.id}`
+            callback_data: `episode:${episode.id}`
           }]);
         });
         message = state.breadcrumb.join(' > ');
@@ -203,8 +203,8 @@ class SeriesHandler {
     } else if (data.startsWith('prev_series') || data.startsWith('next_series')) {
       state.page += data === 'prev_series' ? -1 : 1;
       await this.sendResultsPage(chatId);
-    } else if (data.startsWith('series_')) {
-      const seriesId = data.split('_')[1];
+    } else if (data.startsWith('series:')) {
+      const seriesId = data.substring(7); // Remove 'series:'
       const series = this.movieDataManager.findSeriesById(seriesId);
       
       if (series) {
@@ -213,8 +213,8 @@ class SeriesHandler {
         state.breadcrumb = [`📺 ${series.name || series.title}`];
         await this.sendResultsPage(chatId);
       }
-    } else if (data.startsWith('season_')) {
-      const seasonId = data.split('_')[1];
+    } else if (data.startsWith('season:')) {
+      const seasonId = data.substring(7); // Remove 'season:'
       const season = this.movieDataManager.findSeasonById(seasonId);
       
       if (season) {
@@ -223,8 +223,8 @@ class SeriesHandler {
         state.breadcrumb.push(season.name);
         await this.sendResultsPage(chatId);
       }
-    } else if (data.startsWith('episode_')) {
-      const episodeId = data.split('_')[1];
+    } else if (data.startsWith('episode:')) {
+      const episodeId = data.substring(8); // Remove 'episode:'
       const episode = this.movieDataManager.getEpisodeById(episodeId);
       
       if (episode) {
@@ -237,7 +237,7 @@ class SeriesHandler {
         const keyboard = [
           qualities.map(quality => ({
             text: quality.label,
-            callback_data: `download_${episode.id}_${quality.itag}_series`
+            callback_data: `download:${episode.id}:${quality.itag}:series`
           })),
           [{ text: '⬅️ Volver', callback_data: 'back_series' }]
         ];

@@ -16,15 +16,15 @@ class CallbackHandler {
 
       if (data === 'prev_page' || data === 'next_page') {
         await this.handlePageNavigation(chatId, messageId, data);
-      } else if (data.startsWith('select_movie_')) {
+      } else if (data.startsWith('select_movie:')) {
         await this.handleMovieSelection(chatId, data);
-      } else if (data.startsWith('select_series_')) {
+      } else if (data.startsWith('select_series:')) {
         await this.handleSeriesSelection(chatId, data);
-      } else if (data.startsWith('select_season_')) {
+      } else if (data.startsWith('select_season:')) {
         await this.handleSeasonSelection(chatId, data);
-      } else if (data.startsWith('select_episode_')) {
+      } else if (data.startsWith('select_episode:')) {
         await this.handleEpisodeSelection(chatId, data);
-      } else if (data.startsWith('download_')) {
+      } else if (data.startsWith('download:')) {
         await this.handleDownload(chatId, data);
       }
     } catch (error) {
@@ -48,7 +48,7 @@ class CallbackHandler {
   }
 
   async handleMovieSelection(chatId, data) {
-    const movieId = data.split('_')[2];
+    const movieId = data.substring(12); // Remove 'select_movie:'
     const movie = this.movieDataManager.getMovieById(movieId);
     
     if (movie) {
@@ -60,7 +60,7 @@ class CallbackHandler {
 
       const buttons = qualities.map(quality => ({
         text: quality.label,
-        callback_data: `download_${movie.id}_${quality.itag}`
+        callback_data: `download:${movie.id}:${quality.itag}`
       }));
 
       const message = `🎬 *${movie.name}*\n` +
@@ -75,14 +75,14 @@ class CallbackHandler {
   }
 
   async handleSeriesSelection(chatId, data) {
-    const seriesId = data.split('_')[2];
+    const seriesId = data.substring(13); // Remove 'select_series:'
     const seasons = this.movieDataManager.getSeasons(seriesId);
     const series = this.movieDataManager.findSeriesById(seriesId);
     
     if (seasons.length > 0) {
       const keyboard = seasons.map(season => [{
         text: `📺 ${season.name}`,
-        callback_data: `select_season_${season.id}`
+        callback_data: `select_season:${season.id}`
       }]);
 
       const message = `📺 *${series.name}*\n` +
@@ -97,14 +97,14 @@ class CallbackHandler {
   }
 
   async handleSeasonSelection(chatId, data) {
-    const seasonId = data.split('_')[2];
+    const seasonId = data.substring(13); // Remove 'select_season:'
     const episodes = this.movieDataManager.getEpisodes(seasonId);
     const season = this.movieDataManager.findSeasonById(seasonId);
     
     if (episodes.length > 0) {
       const keyboard = episodes.map(episode => [{
         text: `📺 ${episode.name}`,
-        callback_data: `select_episode_${episode.id}`
+        callback_data: `select_episode:${episode.id}`
       }]);
 
       await this.bot.sendMessage(chatId, `🎬 ${season.name}\nSelecciona un episodio:`, {
@@ -114,7 +114,7 @@ class CallbackHandler {
   }
 
   async handleEpisodeSelection(chatId, data) {
-    const episodeId = data.split('_')[2];
+    const episodeId = data.substring(14); // Remove 'select_episode:'
     const qualities = [
       { label: '🎬 1080p HD', itag: '37' },
       { label: '🎥 720p HD', itag: '22' },
@@ -123,7 +123,7 @@ class CallbackHandler {
 
     const buttons = qualities.map(quality => ({
       text: quality.label,
-      callback_data: `download_${episodeId}_${quality.itag}`
+      callback_data: `download:${episodeId}:${quality.itag}`
     }));
 
     await this.bot.sendMessage(chatId, '📊 Selecciona la calidad:', {
@@ -132,8 +132,8 @@ class CallbackHandler {
   }
 
   async handleDownload(chatId, data) {
-    const [_, id, itag] = data.split('_');
-    await this.downloadHandler.downloadAndSendVideo(chatId, id, itag);
+    const [_, id, itag, type] = data.split(':');
+    await this.downloadHandler.downloadAndSendVideo(chatId, id, itag, type);
   }
 }
 

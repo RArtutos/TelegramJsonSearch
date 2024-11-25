@@ -29,38 +29,97 @@ class TelegramChannelManager {
     }
   }
 
-  async initializeCache() {
+async initializeCache() {
     try {
-      for (const channelId of this.channels) {
-        console.log(`Fetching messages from channel ${channelId}...`);
-        const entity = await this.client.getEntity(channelId);
-        const messages = await this.client.getMessages(entity, {
-          limit: 100,
-          filter: message => message.video !== undefined
-        });
+        for (const channelId of this.channels) {
+            console.log(`Fetching messages from channel ${channelId}...`);
+            const entity = await this.client.getEntity(channelId);
+            const messages = await this.client.getMessages(entity, {
+                limit: 100,
+                filterPredicate: (message) => message.media?.video !== undefined
+            });
 
-        for (const message of messages) {
-          if (message.video && message.text) {
-            const match = message.text.match(/\[(.*?_\d+)\]/);
-            if (match) {
-              const videoId = match[1];
-              this.videoCache.set(videoId, {
-                channelId,
-                messageId: message.id
-              });
+            for (const message of messages) {
+                if (message.media?.video && message.text) {
+                    // Extraer baseId y itag si están disponibles
+                    const match = message.text.match(/\[([^\[]+)\]$/);
+                        if (match) {
+                        const fullString = match[1];  // Todo lo que está dentro de los corchetes
+                        const parts = fullString.split(':');  // Separar por el carácter ":"
+
+                        const baseId = parts[0];  // El primer elemento es el baseId
+                        const itag = parts.length > 1 ? parts[1] : null;  // El segundo elemento es el itag, si está presente
+
+
+                        console.log(`Guardando video en caché: baseId=${baseId}, itag=${itag}`);
+
+                        // Guardar todas las calidades disponibles para este video
+                        const existingEntry = this.videoCache.get(baseId) || [];
+                        existingEntry.push({
+                            channelId,
+                            messageId: message.id,
+                            itag,
+                            text: message.text
+                        });
+                        this.videoCache.set(baseId, existingEntry);
+                    }
+                }
             }
-          }
         }
-      }
-      console.log(`✅ Cache initialized with ${this.videoCache.size} videos`);
+        console.log(`✅ Cache initialized with ${this.videoCache.size} videos`);
+        // Mostrar contenido de la caché al final
+        console.log("Contenido de la caché:", JSON.stringify([...this.videoCache.entries()], null, 2));
     } catch (error) {
-      console.error('Error initializing cache:', error);
+        console.error('Error initializing cache:', error);
     }
-  }
+}
+
 
   async findExistingVideo(videoIdentifier) {
-    return this.videoCache.get(videoIdentifier);
-  }
+    const [baseId, itag] = videoIdentifier.split(':');
+    console.log("Buscando video en caché:", videoIdentifier);
+    console.log("Base ID:", baseId, "Itag:", itag || "N/A");
+
+    const cachedEntries = this.videoCache.get(baseId);
+    console.log("Entradas en caché para el ID base:", cachedEntries);
+
+    if (cachedEntries) {
+        // Si tienes ambos, busca por baseId y itag
+        if (itag) {
+            console.log("Buscando coincidencia con itag:", itag);
+            const matchingEntry = cachedEntries.find(entry => entry.itag === itag);
+            
+            if (matchingEntry) {
+                console.log("Video encontrado:", matchingEntry);
+                return {
+                    channelId: matchingEntry.channelId,
+                    messageId: matchingEntry.messageId
+                };
+            } else {
+                console.log("No se encontró video con el itag:", itag);
+            }
+        } else {
+            // Si solo tienes el baseId, busca solo por baseId
+            console.log("Buscando coincidencia solo con baseId:", baseId);
+            const matchingEntry = cachedEntries[0];  // Puedes personalizar esta lógica si hay múltiples entradas
+
+            if (matchingEntry) {
+                console.log("Video encontrado:", matchingEntry);
+                return {
+                    channelId: matchingEntry.channelId,
+                    messageId: matchingEntry.messageId
+                };
+            } else {
+                console.log("No se encontró video con el baseId:", baseId);
+            }
+        }
+    } else {
+        console.log("No hay entradas en caché para este baseId:", baseId);
+    }
+    
+    return null;
+}
+
 
   async uploadToChannel(stream, options) {
     if (!this.uploadChannel) {
@@ -71,15 +130,20 @@ class TelegramChannelManager {
       const result = await this.bot.sendVideo(this.uploadChannel, stream, options);
       
       if (result && result.video) {
-        const match = options.caption.match(/\[(.*?)\]/);
+        const match = options.caption.match(/\[(.*?)]/);
         if (match) {
-          const videoId = match[1];
-          const cacheEntry = {
+          const [baseId, itag] = match[1].split(':');
+          const existingEntry = this.videoCache.get(baseId) || [];
+          existingEntry.push({
+            channelId: this.uploadChannel,
+            messageId: result.message_id,
+            text: options.caption
+          });
+          this.videoCache.set(baseId, existingEntry);
+          return {
             channelId: this.uploadChannel,
             messageId: result.message_id
           };
-          this.videoCache.set(videoId, cacheEntry);
-          return cacheEntry;
         }
       }
       

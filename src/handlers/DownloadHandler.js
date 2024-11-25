@@ -62,12 +62,17 @@ class DownloadHandler {
       return;
     }
 
-    const videoIdentifier = `${fileId}_${itag}`;
+    // Construir el identificador del video usando : como separador
+    const videoIdentifier = `${fileId}:${itag}`;
+    console.log('Buscando video en caché:', videoIdentifier);
+    
     const existingVideo = await this.channelManager.findExistingVideo(videoIdentifier);
+    console.log('Resultado de búsqueda en caché:', existingVideo);
 
     if (existingVideo) {
       try {
-        await this.bot.sendMessage(chatId, '🔄 Enviando video desde la caché...');
+        console.log('Video encontrado en caché, reenviando...');
+        await this.bot.sendMessage(chatId, '🔄 Reenviando video desde la caché...');
         await this.bot.forwardMessage(chatId, existingVideo.channelId, existingVideo.messageId);
         return;
       } catch (error) {
@@ -149,7 +154,7 @@ class DownloadHandler {
         this.activeDownloads.set(contentId, downloadInfo);
       });
 
-      // Subir al canal primero
+      // Subir al canal con el nuevo formato de identificador
       const channelResult = await this.channelManager.uploadToChannel(uploadStream, {
         caption: `🎬 ${contentName} [${videoIdentifier}]`,
         supports_streaming: true,

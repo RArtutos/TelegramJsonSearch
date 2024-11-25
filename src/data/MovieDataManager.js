@@ -47,7 +47,6 @@ class MovieDataManager {
               items.push(item);
             }
           } else {
-            // Para series, buscar por nombre y título
             if (item.title?.toLowerCase() === tmdbTitle.toLowerCase() || 
                 item.name?.toLowerCase() === tmdbTitle.toLowerCase()) {
               items.push({
@@ -61,6 +60,91 @@ class MovieDataManager {
     }
     
     return items;
+  }
+
+  getAllMovies() {
+    const movies = [];
+    for (const category of this.movieData) {
+      if (category.children) {
+        for (const movie of category.children) {
+          movies.push({
+            id: movie.id,
+            name: movie.name || movie.title,
+            size: movie.size,
+            quality: movie.quality || 'Unknown',
+            dateAdded: movie.dateAdded || new Date().toISOString()
+          });
+        }
+      }
+    }
+    return movies;
+  }
+
+  getAllSeries() {
+    const series = [];
+    for (const category of this.seriesData) {
+      if (category.children) {
+        for (const serie of category.children) {
+          series.push({
+            id: serie.id,
+            name: serie.name || serie.title,
+            size: serie.size,
+            seasons: this.getSeasonCount(serie.id),
+            dateAdded: serie.dateAdded || new Date().toISOString()
+          });
+        }
+      }
+    }
+    return series;
+  }
+
+  getSeasonCount(seriesId) {
+    const series = this.findSeriesById(seriesId);
+    if (!series || !series.children) return 0;
+    return series.children.filter(child => 
+      child.type === 'directory' && 
+      child.name.toLowerCase().includes('season')
+    ).length;
+  }
+
+  getStats() {
+    let totalSize = 0;
+    let totalMovies = 0;
+    let totalSeries = 0;
+
+    // Calculate movies stats
+    for (const category of this.movieData) {
+      if (category.children) {
+        totalMovies += category.children.length;
+        for (const movie of category.children) {
+          totalSize += movie.size || 0;
+        }
+      }
+    }
+
+    // Calculate series stats
+    for (const category of this.seriesData) {
+      if (category.children) {
+        totalSeries += category.children.length;
+        for (const series of category.children) {
+          if (series.children) {
+            for (const season of series.children) {
+              if (season.children) {
+                for (const episode of season.children) {
+                  totalSize += episode.size || 0;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      totalMovies,
+      totalSeries,
+      totalSize
+    };
   }
 
   getSeasons(seriesId) {

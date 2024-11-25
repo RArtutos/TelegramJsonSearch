@@ -8,11 +8,29 @@ class DownloadHandler {
     this.MAX_PARALLEL_DOWNLOADS = 8;
     this.UPDATE_INTERVAL = 1000;
     this.progressMessages = new Map();
+    this.activeDownloads = new Map();
+  }
+
+  getActiveDownloads() {
+    return Array.from(this.activeDownloads.values());
   }
 
   async downloadAndSendVideo(chatId, movieId, itag, movieName) {
     const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
     let updateInterval;
+
+    const downloadInfo = {
+      id: movieId,
+      name: movieName,
+      progress: 0,
+      speed: 0,
+      downloadedSize: 0,
+      totalSize: 0,
+      status: 'downloading',
+      startTime: Date.now()
+    };
+
+    this.activeDownloads.set(movieId, downloadInfo);
 
     try {
       const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${encodeURIComponent(movieName)}?a=0&id=${movieId}&itag=${itag}`;
@@ -31,6 +49,14 @@ class DownloadHandler {
         state.downloadedBytes = progress.downloadedBytes;
         state.totalSize = progress.totalSize;
         state.activeChunks = progress.activeChunks;
+
+        // Update download info
+        const elapsed = (Date.now() - state.startTime) / 1000;
+        downloadInfo.progress = Math.round((progress.downloadedBytes / progress.totalSize) * 100);
+        downloadInfo.speed = progress.downloadedBytes / elapsed;
+        downloadInfo.downloadedSize = progress.downloadedBytes;
+        downloadInfo.totalSize = progress.totalSize;
+        this.activeDownloads.set(movieId, downloadInfo);
       });
 
       updateInterval = setInterval(() => {
@@ -44,18 +70,19 @@ class DownloadHandler {
       state.startTime = Date.now();
       state.downloadedBytes = 0;
       state.totalSize = totalSize;
+      downloadInfo.status = 'uploading';
 
-      // Crear un nuevo PassThrough stream para monitorear la subida
       const { PassThrough } = require('stream');
       const uploadStream = new PassThrough();
       let uploadedBytes = 0;
 
       stream.pipe(uploadStream);
 
-      // Monitorear el progreso de la subida
       uploadStream.on('data', (chunk) => {
         uploadedBytes += chunk.length;
         state.downloadedBytes = uploadedBytes;
+        downloadInfo.downloadedSize = uploadedBytes;
+        this.activeDownloads.set(movieId, downloadInfo);
       });
 
       await this.bot.sendVideo(chatId, uploadStream, {
@@ -66,6 +93,9 @@ class DownloadHandler {
         height: itag === '37' ? 1080 : (itag === '22' ? 720 : 360)
       });
 
+      downloadInfo.status = 'completed';
+      this.activeDownloads.set(movieId, downloadInfo);
+
       clearInterval(updateInterval);
       await this.bot.editMessageText('✅ Video enviado exitosamente!', {
         chat_id: chatId,
@@ -74,15 +104,24 @@ class DownloadHandler {
 
       setTimeout(() => {
         this.bot.deleteMessage(chatId, statusMessage.message_id).catch(() => {});
+        this.activeDownloads.delete(movieId);
       }, 5000);
 
     } catch (error) {
       clearInterval(updateInterval);
       console.error('Error in download process:', error);
+      downloadInfo.status = 'error';
+      downloadInfo.error = error.message;
+      this.activeDownloads.set(movieId, downloadInfo);
+
       await this.bot.editMessageText(`❌ Error: ${error.message || 'Error desconocido'}`, {
         chat_id: chatId,
         message_id: statusMessage.message_id
       });
+
+      setTimeout(() => {
+        this.activeDownloads.delete(movieId);
+      }, 30000);
     }
   }
 

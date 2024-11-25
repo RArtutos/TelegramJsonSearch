@@ -3,6 +3,7 @@ const MovieDataManager = require('../data/MovieDataManager');
 const MovieHandler = require('../handlers/MovieHandler');
 const SeriesHandler = require('../handlers/SeriesHandler');
 const DownloadHandler = require('../handlers/DownloadHandler');
+const AdminHandler = require('../handlers/AdminHandler');
 
 class MovieSearchBot {
   constructor() {
@@ -16,6 +17,7 @@ class MovieSearchBot {
     this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
     this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
     this.downloadHandler = new DownloadHandler(this.bot);
+    this.adminHandler = new AdminHandler(this.bot, this.movieDataManager, this.downloadHandler);
 
     this.initializeBot();
   }
@@ -39,6 +41,19 @@ class MovieSearchBot {
 
     this.bot.onText(/\/series (.+)/, (msg, match) => {
       this.seriesHandler.handleSearch(msg.chat.id, match[1]);
+    });
+
+    // Admin Commands
+    this.bot.onText(/\/listAll (.+)/, (msg, match) => {
+      this.adminHandler.handleListAll(msg, match[1]);
+    });
+
+    this.bot.onText(/\/status/, (msg) => {
+      this.adminHandler.handleStatus(msg);
+    });
+
+    this.bot.onText(/\/statusC/, (msg) => {
+      this.adminHandler.handleDetailedStatus(msg);
     });
 
     this.bot.on('callback_query', async (query) => {

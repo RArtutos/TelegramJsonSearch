@@ -145,7 +145,8 @@ class MovieDataManager {
     for (const category of this.seriesData) {
       for (const series of category.children || []) {
         for (const season of series.children || []) {
-          if (season.id === id) {
+          // Comparación exacta del ID completo
+          if (season.id && season.id === id) {
             console.log(`✅ Temporada encontrada: ${season.name}`);
             return season;
           }
@@ -156,7 +157,6 @@ class MovieDataManager {
     return null;
   }
 
-  // Rest of the methods remain unchanged...
   getAllMovies() {
     const movies = [];
     for (const category of this.movieData) {

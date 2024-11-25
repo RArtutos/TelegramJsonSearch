@@ -9,7 +9,7 @@ class MovieHandler {
     this.userStates = new Map();
   }
 
-  async handleSearch(chatId, searchQuery) {
+  async handleSearch(chatId, searchQuery, userId) {
     if (searchQuery.length < 2) {
       this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
       return;
@@ -43,7 +43,8 @@ class MovieHandler {
         page: 0,
         totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE),
         currentMessageId: null,
-        breadcrumb: []
+        breadcrumb: [],
+        userId
       });
 
       const message = await this.sendResultsPage(chatId);
@@ -91,12 +92,10 @@ class MovieHandler {
 
     const keyboard = [];
 
-    // Botón de volver si estamos en una película
     if (state.breadcrumb.length > 0) {
       keyboard.push([{ text: '⬅️ Volver a la lista', callback_data: 'back_movie' }]);
     }
 
-    // Lista de películas o detalles de película
     if (state.breadcrumb.length === 0) {
       currentResults.forEach(result => {
         keyboard.push([{
@@ -105,7 +104,6 @@ class MovieHandler {
         }]);
       });
 
-      // Botones de navegación
       const navButtons = [];
       if (state.page > 0) {
         navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_movie' });

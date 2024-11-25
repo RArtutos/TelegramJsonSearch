@@ -9,7 +9,7 @@ class SeriesHandler {
     this.userStates = new Map();
   }
 
-  async handleSearch(chatId, searchQuery) {
+  async handleSearch(chatId, searchQuery, userId) {
     if (searchQuery.length < 2) {
       this.bot.sendMessage(chatId, '⚠️ Por favor, proporciona un término de búsqueda más largo.');
       return;
@@ -46,7 +46,8 @@ class SeriesHandler {
         currentMessageId: null,
         breadcrumb: [],
         selectedSeries: null,
-        selectedSeason: null
+        selectedSeason: null,
+        userId
       });
 
       const message = await this.sendResultsPage(chatId);
@@ -95,7 +96,6 @@ class SeriesHandler {
     const keyboard = [];
     let message = '';
 
-    // Botón de volver
     if (state.breadcrumb.length > 0) {
       keyboard.push([{
         text: '⬅️ Volver',

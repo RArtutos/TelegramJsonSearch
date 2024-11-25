@@ -36,11 +36,11 @@ class MovieSearchBot {
     });
 
     this.bot.onText(/\/movie (.+)/, (msg, match) => {
-      this.movieHandler.handleSearch(msg.chat.id, match[1]);
+      this.movieHandler.handleSearch(msg.chat.id, match[1], msg.from.id);
     });
 
     this.bot.onText(/\/series (.+)/, (msg, match) => {
-      this.seriesHandler.handleSearch(msg.chat.id, match[1]);
+      this.seriesHandler.handleSearch(msg.chat.id, match[1], msg.from.id);
     });
 
     this.bot.onText(/\/listAll (.+)/, (msg, match) => {
@@ -68,7 +68,13 @@ class MovieSearchBot {
           await this.seriesHandler.handleCallback(query);
         } else if (query.data.startsWith('download_')) {
           const [_, id, itag, type] = query.data.split('_');
-          await this.downloadHandler.downloadAndSendVideo(query.message.chat.id, id, itag, type || 'movie');
+          await this.downloadHandler.downloadAndSendVideo(
+            query.message.chat.id, 
+            id, 
+            itag, 
+            type || 'movie',
+            query.from.id
+          );
         }
       } catch (error) {
         console.error('Error handling callback:', error);

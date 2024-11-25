@@ -8,41 +8,63 @@ class DownloadHandler {
     this.CHUNK_SIZE = 10 * 1024 * 1024;
     this.MAX_PARALLEL_DOWNLOADS = 8;
     this.UPDATE_INTERVAL = 1000;
+    this.MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 - 80 * 1024 * 1024; // 1.92GB en bytes
     this.progressMessages = new Map();
     this.activeDownloads = new Map();
+    this.userDownloads = new Map();
+    this.ADMIN_IDS = process.env.ADMIN_IDS ? process.env.ADMIN_IDS.split(',').map(id => parseInt(id)) : [];
+  }
+
+  isAdmin(userId) {
+    return this.ADMIN_IDS.includes(userId);
   }
 
   getActiveDownloads() {
     return Array.from(this.activeDownloads.values());
   }
 
-  async downloadAndSendVideo(chatId, contentId, itag, type = 'movie') {
-    const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
-    let updateInterval;
+  canUserDownload(userId) {
+    if (this.isAdmin(userId)) return true;
+    return !this.userDownloads.has(userId);
+  }
+
+  async downloadAndSendVideo(chatId, contentId, itag, type = 'movie', userId) {
+    // Verificar si el usuario puede descargar
+    if (!this.canUserDownload(userId)) {
+      await this.bot.sendMessage(chatId, '⚠️ Ya tienes una descarga activa. Espera a que termine.');
+      return;
+    }
 
     // Obtener información del contenido
     let contentInfo;
     let contentName;
     let fileId;
+    let fileSize;
 
     if (type === 'movie') {
       contentInfo = this.movieDataManager.getMovieById(contentId);
       contentName = contentInfo?.name || contentInfo?.title;
       fileId = contentId;
+      fileSize = contentInfo?.size || 0;
     } else {
       contentInfo = this.movieDataManager.getEpisodeById(contentId);
       const seriesInfo = this.movieDataManager.getSeriesInfoByEpisodeId(contentId);
       contentName = `${seriesInfo.seriesName} - ${seriesInfo.seasonName} - ${contentInfo?.name}`;
       fileId = contentId;
+      fileSize = contentInfo?.size || 0;
     }
 
-    if (!contentName) {
-      await this.bot.editMessageText('❌ Error: No se pudo obtener la información del contenido', {
-        chat_id: chatId,
-        message_id: statusMessage.message_id
-      });
+    // Verificar tamaño del archivo
+    if (fileSize > this.MAX_FILE_SIZE) {
+      await this.bot.sendMessage(
+        chatId, 
+        `⚠️ El archivo es demasiado grande (${formatBytes(fileSize)}). El límite es 1.92GB.`
+      );
       return;
     }
+
+    const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
+    let updateInterval;
 
     const downloadInfo = {
       id: contentId,
@@ -52,10 +74,12 @@ class DownloadHandler {
       downloadedSize: 0,
       totalSize: 0,
       status: 'downloading',
-      startTime: Date.now()
+      startTime: Date.now(),
+      userId
     };
 
     this.activeDownloads.set(contentId, downloadInfo);
+    this.userDownloads.set(userId, contentId);
 
     try {
       const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${encodeURIComponent(fileId)}?a=0&id=${fileId}&itag=${itag}`;
@@ -125,9 +149,11 @@ class DownloadHandler {
         message_id: statusMessage.message_id
       });
 
+      // Limpiar después de completar
       setTimeout(() => {
         this.bot.deleteMessage(chatId, statusMessage.message_id).catch(() => {});
         this.activeDownloads.delete(contentId);
+        this.userDownloads.delete(userId);
       }, 5000);
 
     } catch (error) {
@@ -142,8 +168,10 @@ class DownloadHandler {
         message_id: statusMessage.message_id
       });
 
+      // Limpiar después de error
       setTimeout(() => {
         this.activeDownloads.delete(contentId);
+        this.userDownloads.delete(userId);
       }, 30000);
     }
   }

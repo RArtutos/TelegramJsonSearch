@@ -2,8 +2,9 @@ const ChunkDownloader = require('../utils/ChunkDownloader');
 const { formatBytes, formatTime, createProgressBar } = require('../utils/formatters');
 
 class DownloadHandler {
-  constructor(bot) {
+  constructor(bot, movieDataManager) {
     this.bot = bot;
+    this.movieDataManager = movieDataManager;
     this.CHUNK_SIZE = 10 * 1024 * 1024;
     this.MAX_PARALLEL_DOWNLOADS = 8;
     this.UPDATE_INTERVAL = 1000;
@@ -15,13 +16,37 @@ class DownloadHandler {
     return Array.from(this.activeDownloads.values());
   }
 
-  async downloadAndSendVideo(chatId, movieId, itag, movieName) {
+  async downloadAndSendVideo(chatId, contentId, itag, type = 'movie') {
     const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
     let updateInterval;
 
+    // Obtener información del contenido
+    let contentInfo;
+    let contentName;
+    let fileId;
+
+    if (type === 'movie') {
+      contentInfo = this.movieDataManager.getMovieById(contentId);
+      contentName = contentInfo?.name || contentInfo?.title;
+      fileId = contentId;
+    } else {
+      contentInfo = this.movieDataManager.getEpisodeById(contentId);
+      const seriesInfo = this.movieDataManager.getSeriesInfoByEpisodeId(contentId);
+      contentName = `${seriesInfo.seriesName} - ${seriesInfo.seasonName} - ${contentInfo?.name}`;
+      fileId = contentId;
+    }
+
+    if (!contentName) {
+      await this.bot.editMessageText('❌ Error: No se pudo obtener la información del contenido', {
+        chat_id: chatId,
+        message_id: statusMessage.message_id
+      });
+      return;
+    }
+
     const downloadInfo = {
-      id: movieId,
-      name: movieName,
+      id: contentId,
+      name: contentName,
       progress: 0,
       speed: 0,
       downloadedSize: 0,
@@ -30,10 +55,10 @@ class DownloadHandler {
       startTime: Date.now()
     };
 
-    this.activeDownloads.set(movieId, downloadInfo);
+    this.activeDownloads.set(contentId, downloadInfo);
 
     try {
-      const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${encodeURIComponent(movieName)}?a=0&id=${movieId}&itag=${itag}`;
+      const downloadUrl = `https://pelis.gbstream.us.kg/api/v1/redirectdownload/${encodeURIComponent(fileId)}?a=0&id=${fileId}&itag=${itag}`;
       
       const state = {
         startTime: Date.now(),
@@ -50,22 +75,20 @@ class DownloadHandler {
         state.totalSize = progress.totalSize;
         state.activeChunks = progress.activeChunks;
 
-        // Update download info
         const elapsed = (Date.now() - state.startTime) / 1000;
         downloadInfo.progress = Math.round((progress.downloadedBytes / progress.totalSize) * 100);
         downloadInfo.speed = progress.downloadedBytes / elapsed;
         downloadInfo.downloadedSize = progress.downloadedBytes;
         downloadInfo.totalSize = progress.totalSize;
-        this.activeDownloads.set(movieId, downloadInfo);
+        this.activeDownloads.set(contentId, downloadInfo);
       });
 
       updateInterval = setInterval(() => {
-        this.updateProgressMessage(chatId, statusMessage.message_id, state);
+        this.updateProgressMessage(chatId, statusMessage.message_id, state, contentName);
       }, this.UPDATE_INTERVAL);
 
       const { stream, totalSize } = await downloader.start();
 
-      // Cambiar a fase de subida
       state.phase = 'upload';
       state.startTime = Date.now();
       state.downloadedBytes = 0;
@@ -82,11 +105,11 @@ class DownloadHandler {
         uploadedBytes += chunk.length;
         state.downloadedBytes = uploadedBytes;
         downloadInfo.downloadedSize = uploadedBytes;
-        this.activeDownloads.set(movieId, downloadInfo);
+        this.activeDownloads.set(contentId, downloadInfo);
       });
 
       await this.bot.sendVideo(chatId, uploadStream, {
-        caption: `🎬 ${movieName}`,
+        caption: `🎬 ${contentName}`,
         supports_streaming: true,
         duration: 0,
         width: itag === '37' ? 1920 : (itag === '22' ? 1280 : 640),
@@ -94,7 +117,7 @@ class DownloadHandler {
       });
 
       downloadInfo.status = 'completed';
-      this.activeDownloads.set(movieId, downloadInfo);
+      this.activeDownloads.set(contentId, downloadInfo);
 
       clearInterval(updateInterval);
       await this.bot.editMessageText('✅ Video enviado exitosamente!', {
@@ -104,7 +127,7 @@ class DownloadHandler {
 
       setTimeout(() => {
         this.bot.deleteMessage(chatId, statusMessage.message_id).catch(() => {});
-        this.activeDownloads.delete(movieId);
+        this.activeDownloads.delete(contentId);
       }, 5000);
 
     } catch (error) {
@@ -112,7 +135,7 @@ class DownloadHandler {
       console.error('Error in download process:', error);
       downloadInfo.status = 'error';
       downloadInfo.error = error.message;
-      this.activeDownloads.set(movieId, downloadInfo);
+      this.activeDownloads.set(contentId, downloadInfo);
 
       await this.bot.editMessageText(`❌ Error: ${error.message || 'Error desconocido'}`, {
         chat_id: chatId,
@@ -120,12 +143,12 @@ class DownloadHandler {
       });
 
       setTimeout(() => {
-        this.activeDownloads.delete(movieId);
+        this.activeDownloads.delete(contentId);
       }, 30000);
     }
   }
 
-  async updateProgressMessage(chatId, messageId, state) {
+  async updateProgressMessage(chatId, messageId, state, contentName) {
     try {
       const now = Date.now();
       const elapsed = (now - state.startTime) / 1000;
@@ -139,7 +162,8 @@ class DownloadHandler {
       const timeText = `⏱ ${formatTime(remaining)} restantes`;
       const elapsedText = `⏳ ${formatTime(elapsed)} transcurridos`;
 
-      let message = `${state.phase === 'download' ? '📥 Descargando' : '📤 Subiendo'}...\n\n` +
+      let message = `${state.phase === 'download' ? '📥 Descargando' : '📤 Subiendo'}\n` +
+                   `🎬 ${contentName}\n\n` +
                    `${progressBar} ${progress.toFixed(1)}%\n\n` +
                    `⚡ Velocidad: ${speedText}\n` +
                    `📦 Progreso: ${downloadedText}\n` +

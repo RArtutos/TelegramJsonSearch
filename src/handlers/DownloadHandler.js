@@ -2,6 +2,7 @@ const ChunkDownloader = require('../utils/ChunkDownloader');
 const { formatBytes, formatTime, createProgressBar } = require('../utils/formatters');
 const TelegramChannelManager = require('../services/TelegramChannelManager');
 const { PassThrough } = require('stream');
+const axios = require('axios');
 
 class DownloadHandler {
   constructor(bot, movieDataManager) {
@@ -36,6 +37,8 @@ class DownloadHandler {
     let updateInterval;
     let downloader;
     let isCancelled = false;
+    let cancelHandler;
+    let statusMessage;
 
     try {
       if (!this.canUserDownload(userId)) {
@@ -63,11 +66,13 @@ class DownloadHandler {
         }
 
         if (!contentInfo) {
-          throw new Error('No se encontró el contenido solicitado');
+          await this.bot.sendMessage(chatId, '❌ No se encontró el contenido solicitado.');
+          return;
         }
       } catch (error) {
         console.error('Error getting content info:', error);
-        throw new Error('Error al obtener información del contenido');
+        await this.bot.sendMessage(chatId, '❌ Error al obtener información del contenido.');
+        return;
       }
 
       // Verificar tamaño antes de iniciar cualquier descarga
@@ -93,7 +98,7 @@ class DownloadHandler {
         // Continuar con la descarga si hay error al verificar caché
       }
 
-      const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
+      statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
 
       const downloadInfo = {
         id: contentId,
@@ -126,7 +131,7 @@ class DownloadHandler {
       });
 
       // Manejador de cancelación
-      const cancelHandler = async (query) => {
+      cancelHandler = async (query) => {
         if (query.data === `cancel_${contentId}`) {
           isCancelled = true;
           if (downloader) {
@@ -154,7 +159,16 @@ class DownloadHandler {
         const actualSize = parseInt(headResponse.headers['content-length'], 10);
         
         if (actualSize > this.MAX_FILE_SIZE) {
-          throw new Error(`El archivo es demasiado grande (${formatBytes(actualSize)}). El límite es ${formatBytes(this.MAX_FILE_SIZE)}`);
+          await this.bot.editMessageText(
+            `⚠️ El archivo es demasiado grande (${formatBytes(actualSize)}). El límite es ${formatBytes(this.MAX_FILE_SIZE)}. Por favor, selecciona una calidad menor.`,
+            {
+              chat_id: chatId,
+              message_id: statusMessage.message_id
+            }
+          );
+          this.activeDownloads.delete(contentId);
+          this.userDownloads.delete(userId);
+          return;
         }
         
         const state = {
@@ -258,7 +272,9 @@ class DownloadHandler {
         this.activeDownloads.set(contentId, downloadInfo);
 
         clearInterval(updateInterval);
-        this.bot.removeListener('callback_query', cancelHandler);
+        if (cancelHandler) {
+          this.bot.removeListener('callback_query', cancelHandler);
+        }
         
         await this.bot.editMessageText('✅ Video enviado exitosamente!', {
           chat_id: chatId,
@@ -290,7 +306,9 @@ class DownloadHandler {
         }
       }
       
-      this.bot.removeListener('callback_query', cancelHandler);
+      if (cancelHandler) {
+        this.bot.removeListener('callback_query', cancelHandler);
+      }
       
       const downloadInfo = this.activeDownloads.get(contentId);
       if (downloadInfo) {
@@ -306,14 +324,8 @@ class DownloadHandler {
                           error.message :
                           'Error desconocido. Por favor, intenta con otra calidad.';
 
-      try {
-        await this.bot.editMessageText(`❌ Error: ${errorMessage}`, {
-          chat_id: chatId,
-          message_id: statusMessage.message_id
-        });
-      } catch (msgError) {
-        console.error('Error sending error message:', msgError);
-      }
+      // Enviar mensaje de error al usuario
+      await this.bot.sendMessage(chatId, `❌ Error: ${errorMessage}`);
 
       setTimeout(() => {
         this.activeDownloads.delete(contentId);

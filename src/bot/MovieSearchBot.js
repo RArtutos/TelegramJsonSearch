@@ -59,15 +59,17 @@ class MovieSearchBot {
       try {
         await this.bot.answerCallbackQuery(query.id);
         
-        if (query.data.startsWith('movie_') || query.data.startsWith('prev_movie') || 
-            query.data.startsWith('next_movie') || query.data.startsWith('back_movie')) {
+        const data = query.data;
+        
+        if (data.startsWith('movie:') || data === 'prev_movie' || 
+            data === 'next_movie' || data === 'back_movie') {
           await this.movieHandler.handleCallback(query);
-        } else if (query.data.startsWith('series_') || query.data.startsWith('season_') || 
-                   query.data.startsWith('episode_') || query.data.startsWith('prev_series') || 
-                   query.data.startsWith('next_series') || query.data.startsWith('back_series')) {
+        } else if (data.startsWith('series:') || data.startsWith('season:') || 
+                   data.startsWith('episode:') || data === 'prev_series' || 
+                   data === 'next_series' || data === 'back_series') {
           await this.seriesHandler.handleCallback(query);
-        } else if (query.data.startsWith('download_')) {
-          const [_, id, itag, type] = query.data.split('_');
+        } else if (data.startsWith('download:')) {
+          const [_, id, itag, type] = data.split(':');
           await this.downloadHandler.downloadAndSendVideo(
             query.message.chat.id, 
             id, 

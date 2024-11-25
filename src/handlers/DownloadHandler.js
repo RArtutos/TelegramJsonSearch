@@ -1,14 +1,16 @@
 const ChunkDownloader = require('../utils/ChunkDownloader');
 const { formatBytes, formatTime, createProgressBar } = require('../utils/formatters');
+const TelegramChannelManager = require('../services/TelegramChannelManager');
 
 class DownloadHandler {
   constructor(bot, movieDataManager) {
     this.bot = bot;
     this.movieDataManager = movieDataManager;
+    this.channelManager = new TelegramChannelManager(bot);
     this.CHUNK_SIZE = 10 * 1024 * 1024;
     this.MAX_PARALLEL_DOWNLOADS = 8;
     this.UPDATE_INTERVAL = 1000;
-    this.MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 - 80 * 1024 * 1024; // 1.92GB en bytes
+    this.MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 - 80 * 1024 * 1024; // 1.92GB
     this.progressMessages = new Map();
     this.activeDownloads = new Map();
     this.userDownloads = new Map();
@@ -29,13 +31,11 @@ class DownloadHandler {
   }
 
   async downloadAndSendVideo(chatId, contentId, itag, type = 'movie', userId) {
-    // Verificar si el usuario puede descargar
     if (!this.canUserDownload(userId)) {
       await this.bot.sendMessage(chatId, '⚠️ Ya tienes una descarga activa. Espera a que termine.');
       return;
     }
 
-    // Obtener información del contenido
     let contentInfo;
     let contentName;
     let fileId;
@@ -54,13 +54,26 @@ class DownloadHandler {
       fileSize = contentInfo?.size || 0;
     }
 
-    // Verificar tamaño del archivo
     if (fileSize > this.MAX_FILE_SIZE) {
       await this.bot.sendMessage(
         chatId, 
-        `⚠️ El archivo es demasiado grande (${formatBytes(fileSize)}). El límite es 1.92GB.`
+        `⚠️ El archivo es demasiado grande (${formatBytes(fileSize)}). El límite es 1.92GB. Por favor, selecciona una calidad menor.`
       );
       return;
+    }
+
+    const videoIdentifier = `${fileId}_${itag}`;
+    const existingVideo = await this.channelManager.findExistingVideo(videoIdentifier);
+
+    if (existingVideo) {
+      try {
+        await this.bot.sendMessage(chatId, '🔄 Enviando video desde la caché...');
+        await this.bot.forwardMessage(chatId, existingVideo.channelId, existingVideo.messageId);
+        return;
+      } catch (error) {
+        console.error('Error forwarding cached video:', error);
+        // Continuar con la descarga normal si falla el reenvío
+      }
     }
 
     const statusMessage = await this.bot.sendMessage(chatId, '🔄 Iniciando descarga...');
@@ -113,6 +126,10 @@ class DownloadHandler {
 
       const { stream, totalSize } = await downloader.start();
 
+      if (!stream || totalSize === 0) {
+        throw new Error('No se pudo iniciar la descarga. Por favor, intenta con otra calidad.');
+      }
+
       state.phase = 'upload';
       state.startTime = Date.now();
       state.downloadedBytes = 0;
@@ -132,13 +149,21 @@ class DownloadHandler {
         this.activeDownloads.set(contentId, downloadInfo);
       });
 
-      await this.bot.sendVideo(chatId, uploadStream, {
-        caption: `🎬 ${contentName}`,
+      // Subir al canal primero
+      const channelResult = await this.channelManager.uploadToChannel(uploadStream, {
+        caption: `🎬 ${contentName} [${videoIdentifier}]`,
         supports_streaming: true,
         duration: 0,
         width: itag === '37' ? 1920 : (itag === '22' ? 1280 : 640),
         height: itag === '37' ? 1080 : (itag === '22' ? 720 : 360)
       });
+
+      if (!channelResult) {
+        throw new Error('Error al subir al canal. Por favor, intenta de nuevo.');
+      }
+
+      // Reenviar al chat del usuario
+      await this.bot.forwardMessage(chatId, channelResult.channelId, channelResult.messageId);
 
       downloadInfo.status = 'completed';
       this.activeDownloads.set(contentId, downloadInfo);
@@ -149,7 +174,6 @@ class DownloadHandler {
         message_id: statusMessage.message_id
       });
 
-      // Limpiar después de completar
       setTimeout(() => {
         this.bot.deleteMessage(chatId, statusMessage.message_id).catch(() => {});
         this.activeDownloads.delete(contentId);
@@ -163,12 +187,16 @@ class DownloadHandler {
       downloadInfo.error = error.message;
       this.activeDownloads.set(contentId, downloadInfo);
 
-      await this.bot.editMessageText(`❌ Error: ${error.message || 'Error desconocido'}`, {
+      const errorMessage = error.message.includes('Error al subir') || 
+                          error.message.includes('No se pudo iniciar') ?
+                          error.message :
+                          'Error desconocido. Por favor, intenta con otra calidad.';
+
+      await this.bot.editMessageText(`❌ Error: ${errorMessage}`, {
         chat_id: chatId,
         message_id: statusMessage.message_id
       });
 
-      // Limpiar después de error
       setTimeout(() => {
         this.activeDownloads.delete(contentId);
         this.userDownloads.delete(userId);

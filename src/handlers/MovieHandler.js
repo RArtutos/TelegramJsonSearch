@@ -1,9 +1,10 @@
 const axios = require('axios');
 
 class MovieHandler {
-  constructor(bot, movieDataManager) {
+  constructor(bot, movieDataManager, downloadHandler) {
     this.bot = bot;
     this.movieDataManager = movieDataManager;
+    this.downloadHandler = downloadHandler;
     this.ITEMS_PER_PAGE = 5;
     this.userStates = new Map();
   }
@@ -40,10 +41,15 @@ class MovieHandler {
       this.userStates.set(chatId, {
         results: localResults,
         page: 0,
-        totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE)
+        totalPages: Math.ceil(localResults.length / this.ITEMS_PER_PAGE),
+        currentMessageId: null,
+        breadcrumb: []
       });
 
-      this.sendResultsPage(chatId);
+      const message = await this.sendResultsPage(chatId);
+      const state = this.userStates.get(chatId);
+      state.currentMessageId = message.message_id;
+      this.userStates.set(chatId, state);
     } catch (error) {
       console.error('Error searching movies:', error);
       this.bot.sendMessage(chatId, '❌ Error al buscar películas. Intenta de nuevo.');
@@ -75,7 +81,7 @@ class MovieHandler {
     return items;
   }
 
-  sendResultsPage(chatId) {
+  async sendResultsPage(chatId) {
     const state = this.userStates.get(chatId);
     if (!state) return;
 
@@ -83,81 +89,111 @@ class MovieHandler {
     const end = Math.min(start + this.ITEMS_PER_PAGE, state.results.length);
     const currentResults = state.results.slice(start, end);
 
-    const keyboard = currentResults.map(result => [{
-      text: `🎬 ${result.name || result.title}`,
-      callback_data: `movie_${result.id}`
-    }]);
+    const keyboard = [];
 
-    const navButtons = [];
-    if (state.page > 0) {
-      navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_movie' });
-    }
-    if (state.page < state.totalPages - 1) {
-      navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_movie' });
-    }
-    
-    if (navButtons.length > 0) {
-      keyboard.push(navButtons);
+    // Botón de volver si estamos en una película
+    if (state.breadcrumb.length > 0) {
+      keyboard.push([{ text: '⬅️ Volver a la lista', callback_data: 'back_movie' }]);
     }
 
-    const message = `🎬 Películas (${start + 1}-${end} de ${state.results.length})\n` +
-                   `📄 Página ${state.page + 1} de ${state.totalPages}`;
+    // Lista de películas o detalles de película
+    if (state.breadcrumb.length === 0) {
+      currentResults.forEach(result => {
+        keyboard.push([{
+          text: `🎬 ${result.name || result.title}`,
+          callback_data: `movie_${result.id}`
+        }]);
+      });
 
-    this.bot.sendMessage(chatId, message, {
-      reply_markup: { inline_keyboard: keyboard }
-    });
+      // Botones de navegación
+      const navButtons = [];
+      if (state.page > 0) {
+        navButtons.push({ text: '⬅️ Anterior', callback_data: 'prev_movie' });
+      }
+      if (state.page < state.totalPages - 1) {
+        navButtons.push({ text: 'Siguiente ➡️', callback_data: 'next_movie' });
+      }
+      if (navButtons.length > 0) {
+        keyboard.push(navButtons);
+      }
+    }
+
+    let message;
+    if (state.breadcrumb.length === 0) {
+      message = `🎬 Películas (${start + 1}-${end} de ${state.results.length})\n` +
+                `📄 Página ${state.page + 1} de ${state.totalPages}`;
+    } else {
+      message = state.breadcrumb.join(' > ');
+    }
+
+    const messageOptions = {
+      reply_markup: { inline_keyboard: keyboard },
+      parse_mode: 'Markdown'
+    };
+
+    if (state.currentMessageId) {
+      try {
+        await this.bot.editMessageText(message, {
+          chat_id: chatId,
+          message_id: state.currentMessageId,
+          ...messageOptions
+        });
+        return { message_id: state.currentMessageId };
+      } catch (error) {
+        if (!error.message?.includes('message is not modified')) {
+          console.error('Error editing message:', error);
+        }
+      }
+    }
+
+    return await this.bot.sendMessage(chatId, message, messageOptions);
   }
 
   async handleCallback(query) {
     const chatId = query.message.chat.id;
-    const messageId = query.message.message_id;
     const data = query.data;
-
-    if (data.startsWith('prev_movie') || data.startsWith('next_movie')) {
-      await this.handlePageNavigation(chatId, messageId, data);
-    } else if (data.startsWith('movie_')) {
-      await this.handleMovieSelection(chatId, data);
-    }
-  }
-
-  async handlePageNavigation(chatId, messageId, action) {
     const state = this.userStates.get(chatId);
+
     if (!state) return;
 
-    state.page += action === 'prev_movie' ? -1 : 1;
-    
-    try {
-      await this.bot.deleteMessage(chatId, messageId);
-      this.sendResultsPage(chatId);
-    } catch (error) {
-      console.error('Error in movie page navigation:', error);
-    }
-  }
-
-  async handleMovieSelection(chatId, data) {
-    const movieId = data.split('_')[1];
-    const movie = this.movieDataManager.getMovieById(movieId);
-    
-    if (movie) {
-      const qualities = [
-        { label: '🎬 1080p HD', itag: '37' },
-        { label: '🎥 720p HD', itag: '22' },
-        { label: '📱 360p SD', itag: '18' }
-      ];
-
-      const buttons = qualities.map(quality => ({
-        text: quality.label,
-        callback_data: `download_${movie.id}_${quality.itag}`
-      }));
-
-      const message = `🎬 *${movie.name}*\n` +
-                     `${movie.overview ? `📝 ${movie.overview}\n\n` : ''}` +
-                     `Selecciona la calidad de descarga:`;
+    if (data === 'back_movie') {
+      state.breadcrumb = [];
+      await this.sendResultsPage(chatId);
+    } else if (data.startsWith('prev_movie') || data.startsWith('next_movie')) {
+      state.page += data === 'prev_movie' ? -1 : 1;
+      await this.sendResultsPage(chatId);
+    } else if (data.startsWith('movie_')) {
+      const movieId = data.split('_')[1];
+      const movie = this.movieDataManager.getMovieById(movieId);
       
-      await this.bot.sendMessage(chatId, message, {
-        reply_markup: { inline_keyboard: [buttons] },
-        parse_mode: 'Markdown'
-      });
+      if (movie) {
+        state.breadcrumb = [`🎬 ${movie.name || movie.title}`];
+        
+        const qualities = [
+          { label: '🎬 1080p HD', itag: '37' },
+          { label: '🎥 720p HD', itag: '22' },
+          { label: '📱 360p SD', itag: '18' }
+        ];
+
+        const keyboard = [
+          qualities.map(quality => ({
+            text: quality.label,
+            callback_data: `download_${movie.id}_${quality.itag}_movie`
+          })),
+          [{ text: '⬅️ Volver a la lista', callback_data: 'back_movie' }]
+        ];
+
+        const message = `🎬 *${movie.name}*\n` +
+                       `${movie.overview ? `📝 ${movie.overview}\n\n` : ''}` +
+                       `Selecciona la calidad de descarga:`;
+        
+        await this.bot.editMessageText(message, {
+          chat_id: chatId,
+          message_id: state.currentMessageId,
+          reply_markup: { inline_keyboard: keyboard },
+          parse_mode: 'Markdown'
+        });
+      }
     }
   }
 }

@@ -14,9 +14,9 @@ class MovieSearchBot {
     });
 
     this.movieDataManager = new MovieDataManager();
-    this.movieHandler = new MovieHandler(this.bot, this.movieDataManager);
-    this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager);
-    this.downloadHandler = new DownloadHandler(this.bot);
+    this.downloadHandler = new DownloadHandler(this.bot, this.movieDataManager);
+    this.movieHandler = new MovieHandler(this.bot, this.movieDataManager, this.downloadHandler);
+    this.seriesHandler = new SeriesHandler(this.bot, this.movieDataManager, this.downloadHandler);
     this.adminHandler = new AdminHandler(this.bot, this.movieDataManager, this.downloadHandler);
 
     this.initializeBot();
@@ -43,7 +43,6 @@ class MovieSearchBot {
       this.seriesHandler.handleSearch(msg.chat.id, match[1]);
     });
 
-    // Admin Commands
     this.bot.onText(/\/listAll (.+)/, (msg, match) => {
       this.adminHandler.handleListAll(msg, match[1]);
     });
@@ -60,15 +59,16 @@ class MovieSearchBot {
       try {
         await this.bot.answerCallbackQuery(query.id);
         
-        if (query.data.startsWith('movie_') || query.data.startsWith('prev_movie') || query.data.startsWith('next_movie')) {
+        if (query.data.startsWith('movie_') || query.data.startsWith('prev_movie') || 
+            query.data.startsWith('next_movie') || query.data.startsWith('back_movie')) {
           await this.movieHandler.handleCallback(query);
         } else if (query.data.startsWith('series_') || query.data.startsWith('season_') || 
                    query.data.startsWith('episode_') || query.data.startsWith('prev_series') || 
-                   query.data.startsWith('next_series')) {
+                   query.data.startsWith('next_series') || query.data.startsWith('back_series')) {
           await this.seriesHandler.handleCallback(query);
         } else if (query.data.startsWith('download_')) {
-          const [_, id, itag] = query.data.split('_');
-          await this.downloadHandler.downloadAndSendVideo(query.message.chat.id, id, itag);
+          const [_, id, itag, type] = query.data.split('_');
+          await this.downloadHandler.downloadAndSendVideo(query.message.chat.id, id, itag, type || 'movie');
         }
       } catch (error) {
         console.error('Error handling callback:', error);

@@ -55,6 +55,30 @@ class MovieSearchBot {
       this.adminHandler.handleDetailedStatus(msg);
     });
 
+    this.bot.onText(/\/restartC/, (msg) => {
+      if (this.adminHandler.isAdmin(msg.from.id)) {
+        this.downloadHandler.channelManager.initializeCache()
+          .then(() => this.bot.sendMessage(msg.chat.id, '✅ Caché del canal recargada exitosamente'))
+          .catch(error => {
+            console.error('Error reloading cache:', error);
+            this.bot.sendMessage(msg.chat.id, '❌ Error al recargar la caché');
+          });
+      } else {
+        this.bot.sendMessage(msg.chat.id, '⛔ No tienes permisos de administrador');
+      }
+    });
+
+    this.bot.onText(/\/restart/, (msg) => {
+      if (this.adminHandler.isAdmin(msg.from.id)) {
+        this.bot.sendMessage(msg.chat.id, '🔄 Reiniciando bot...')
+          .then(() => {
+            process.exit(0); // Docker se encargará de reiniciar el contenedor
+          });
+      } else {
+        this.bot.sendMessage(msg.chat.id, '⛔ No tienes permisos de administrador');
+      }
+    });
+
     this.bot.on('callback_query', async (query) => {
       try {
         await this.bot.answerCallbackQuery(query.id);

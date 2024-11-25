@@ -34,6 +34,7 @@ Este bot de Telegram permite buscar películas y series en archivos JSON locales
    TELEGRAM_API_ID=tu_api_id_aquí
    TELEGRAM_API_HASH=tu_api_hash_aquí
    LOCAL_API_URL=http://telegram-api:8081
+   ADMIN_IDS=id1,id2,id3
    ```
 
 6. Construye y ejecuta el contenedor:
@@ -63,13 +64,28 @@ Este bot de Telegram permite buscar películas y series en archivos JSON locales
    - Selecciona el episodio
    - Elige la calidad deseada
 
+## Comandos de Administrador
+
+Los usuarios configurados como administradores tienen acceso a comandos especiales:
+
+- `/status` - Muestra el estado actual del sistema y descargas
+- `/statusC` - Muestra estado detallado del sistema
+- `/listAll movies` - Lista todas las películas en formato CSV
+- `/listAll series` - Lista todas las series en formato CSV
+- `/restartC` - Recarga la caché del canal
+- `/restart` - Reinicia completamente el bot
+
 ## Características
 
 - Búsqueda integrada con TMDB
-- Soporte para archivos grandes (hasta 2GB)
+- Soporte para archivos grandes (hasta 1.92GB)
 - Streaming de video en Telegram
 - Múltiples calidades de video
 - Soporte para películas y series
+- Sistema de caché para videos
+- Verificación de tamaño antes de descarga
+- Capacidad de cancelar descargas
+- Barra de progreso detallada
 
 ## Mantenimiento
 

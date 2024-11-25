@@ -15,6 +15,20 @@ class ChunkDownloader extends EventEmitter {
     this.totalSize = 0;
     this.downloadedBytes = 0;
     this.activeDownloads = 0;
+    this.aborted = false;
+    this.lastSpeedUpdate = Date.now();
+    this.speedSamples = [];
+    this.SPEED_SAMPLE_SIZE = 5;
+  }
+
+  abort() {
+    this.aborted = true;
+    this.downloadedChunks.clear();
+    this.activeDownloads = 0;
+    this.downloadedBytes = 0;
+    if (!this.outputStream.destroyed) {
+      this.outputStream.end();
+    }
   }
 
   async start() {
@@ -28,16 +42,26 @@ class ChunkDownloader extends EventEmitter {
 
       const chunks = this._calculateChunks();
       const downloadPromises = chunks.map(chunk => this._downloadChunk(chunk));
-      await Promise.all(downloadPromises);
       
-      this._assembleChunks();
+      try {
+        await Promise.all(downloadPromises);
+        if (!this.aborted) {
+          this._assembleChunks();
+        }
+      } catch (error) {
+        if (!this.aborted) {
+          throw error;
+        }
+      }
       
       return {
         stream: this.outputStream,
         totalSize: this.totalSize
       };
     } catch (error) {
-      this.outputStream.destroy(error);
+      if (!this.outputStream.destroyed) {
+        this.outputStream.destroy(error);
+      }
       throw error;
     }
   }
@@ -55,29 +79,59 @@ class ChunkDownloader extends EventEmitter {
     return chunks;
   }
 
+  _updateSpeed(bytesIncrement) {
+    const now = Date.now();
+    const timeDiff = (now - this.lastSpeedUpdate) / 1000; // en segundos
+    if (timeDiff > 0) {
+      const speed = bytesIncrement / timeDiff;
+      this.speedSamples.push(speed);
+      
+      // Mantener solo las últimas N muestras
+      if (this.speedSamples.length > this.SPEED_SAMPLE_SIZE) {
+        this.speedSamples.shift();
+      }
+      
+      this.lastSpeedUpdate = now;
+    }
+  }
+
+  _getCurrentSpeed() {
+    if (this.speedSamples.length === 0) return 0;
+    // Calcular la media de las últimas muestras
+    const sum = this.speedSamples.reduce((a, b) => a + b, 0);
+    return sum / this.speedSamples.length;
+  }
+
   async _downloadChunk(chunk) {
+    if (this.aborted) return;
+
     const maxRetries = 3;
     let attempt = 0;
 
-    while (attempt < maxRetries) {
+    while (attempt < maxRetries && !this.aborted) {
       try {
         this.activeDownloads++;
         this._emitProgress();
 
+        let lastProgress = 0;
         const response = await axios({
           method: 'GET',
           url: this.url,
           headers: { Range: `bytes=${chunk.start}-${chunk.end}` },
           responseType: 'arraybuffer',
           onDownloadProgress: (progressEvent) => {
-            const increment = progressEvent.loaded - (progressEvent.lastLoaded || 0);
+            if (this.aborted) return;
+            const increment = progressEvent.loaded - lastProgress;
             this.downloadedBytes += increment;
-            progressEvent.lastLoaded = progressEvent.loaded;
+            this._updateSpeed(increment);
+            lastProgress = progressEvent.loaded;
             this._emitProgress();
           }
         });
 
-        this.downloadedChunks.set(chunk.start, response.data);
+        if (!this.aborted) {
+          this.downloadedChunks.set(chunk.start, response.data);
+        }
         this.activeDownloads--;
         this._emitProgress();
         return;
@@ -85,32 +139,42 @@ class ChunkDownloader extends EventEmitter {
         attempt++;
         this.activeDownloads--;
         
-        if (attempt === maxRetries) {
+        if (attempt === maxRetries && !this.aborted) {
           throw new Error(`Error al descargar chunk ${chunk.start}-${chunk.end}: ${error.message}`);
         }
         
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        if (!this.aborted) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
     }
   }
 
   _assembleChunks() {
+    if (this.aborted) return;
+
     const sortedChunks = Array.from(this.downloadedChunks.entries())
       .sort(([a], [b]) => a - b);
 
     for (const [, chunk] of sortedChunks) {
+      if (this.aborted) break;
       this.outputStream.write(chunk);
     }
 
-    this.outputStream.end();
+    if (!this.aborted) {
+      this.outputStream.end();
+    }
   }
 
   _emitProgress() {
-    this.emit('progress', {
-      downloadedBytes: this.downloadedBytes,
-      totalSize: this.totalSize,
-      activeChunks: this.activeDownloads
-    });
+    if (!this.aborted) {
+      this.emit('progress', {
+        downloadedBytes: this.downloadedBytes,
+        totalSize: this.totalSize,
+        activeChunks: this.activeDownloads,
+        speed: this._getCurrentSpeed()
+      });
+    }
   }
 }
 
